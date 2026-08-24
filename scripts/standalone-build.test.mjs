@@ -1,15 +1,40 @@
 import assert from 'node:assert/strict';
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 import test from 'node:test';
 import { gunzipSync } from 'node:zlib';
 
-import { inlineStandaloneBundle } from './standalone-build-plugin.mjs';
+import { inlineStandaloneBundle, isStandaloneWorkerAssetFileName } from './standalone-build-plugin.mjs';
 import {
   STANDALONE_EXCLUDED_TOOL_DIRECTORIES,
   generateStandaloneToolRegistry,
 } from './standalone-build-config.mjs';
+
+test('covers every included worker client in the standalone CSP audit', () => {
+  const toolsDirectory = resolve('src/tools');
+  const excluded = new Set(STANDALONE_EXCLUDED_TOOL_DIRECTORIES);
+  const expected = readdirSync(toolsDirectory, { withFileTypes: true })
+    .filter(entry => entry.isDirectory() && !excluded.has(entry.name))
+    .filter(entry => readdirSync(resolve(toolsDirectory, entry.name), { withFileTypes: true })
+      .some(file => file.isFile()
+        && file.name.endsWith('worker-client.ts')
+        && readFileSync(resolve(toolsDirectory, entry.name, file.name), 'utf8').includes('new Worker(')))
+    .map(entry => entry.name)
+    .sort();
+  const auditSource = readFileSync(resolve('src/standalone-worker-audit.ts'), 'utf8');
+  const actual = [...auditSource.matchAll(/\bid: '([^']+)'/gu)].map(match => match[1]).sort();
+
+  assert.equal(new Set(actual).size, actual.length, 'Standalone worker audit case IDs must be unique.');
+  assert.deepEqual(actual, expected);
+  assert.equal(actual.length, 48);
+});
+
+test('distinguishes emitted worker scripts from worker-client lazy chunks', () => {
+  assert.equal(isStandaloneWorkerAssetFileName('assets/file-hash.worker-f7b2a459.js'), true);
+  assert.equal(isStandaloneWorkerAssetFileName('assets/file-hash.worker-client-982092e4.js'), false);
+  assert.equal(isStandaloneWorkerAssetFileName('assets/not-a-worker.js'), false);
+});
 
 test('generates a standalone-only registry without the reviewed heavyweight routes', async () => {
   assert.deepEqual(STANDALONE_EXCLUDED_TOOL_DIRECTORIES, [

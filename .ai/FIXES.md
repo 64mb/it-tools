@@ -15,7 +15,9 @@ work is complete as of 2026-08-16.
   tested; sensitive content is not persisted by default.
 - The DataLens standalone sandbox renders explicit router-link menu items with
   unique SVG icons, never touches opaque-origin storage, and executes embedded
-  worker programs without violating `worker-src 'none'`.
+  worker programs without violating `worker-src 'none'`. All 48 included worker
+  clients now have an inventory-checked core-operation smoke in Chromium,
+  Firefox, and WebKit.
 
 Do not resurrect historical upstream issue/PR dumps as a backlog. Reproduce a
 new defect locally, add a failing regression test, and record only unresolved

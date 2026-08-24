@@ -19,3 +19,10 @@ interface ImportMeta {
 
 declare var __IT_TOOLS_STANDALONE_FONTS__: Record<string, string> | undefined;
 declare const __IT_TOOLS_STANDALONE_GEOIP_DATASET_URLS__: Record<string, string> | undefined;
+
+interface Window {
+  __IT_TOOLS_STANDALONE_WORKER_AUDIT__?: {
+    caseIds: readonly string[]
+    runAll: () => Promise<import('./src/standalone-worker-audit').StandaloneWorkerAuditReport>
+  }
+}

@@ -23,6 +23,12 @@ migrateApplicationStorage();
 installOfflineRouteRecovery(router);
 installStandaloneHostBridge();
 
+if (import.meta.env.STANDALONE && new URLSearchParams(window.location.search).has('standaloneWorkerAudit')) {
+  void import('./standalone-worker-audit').then(({ standaloneWorkerAudit }) => {
+    window.__IT_TOOLS_STANDALONE_WORKER_AUDIT__ = standaloneWorkerAudit;
+  });
+}
+
 if (!import.meta.env.STANDALONE) {
   void configurePwaRuntime({
     baseUrl: import.meta.env.BASE_URL,

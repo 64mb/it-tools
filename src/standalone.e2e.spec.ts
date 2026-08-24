@@ -58,7 +58,7 @@ test.describe('standalone single-file build', () => {
   });
 
   test('runs inside the DataLens opaque-origin CSP sandbox and uses the host protocol', async ({ page }) => {
-    test.setTimeout(180_000);
+    test.setTimeout(600_000);
     const runtimeErrors: string[] = [];
     page.on('pageerror', error => runtimeErrors.push(error.message));
     page.on('console', (message) => {
@@ -74,7 +74,7 @@ test.describe('standalone single-file build', () => {
     }));
     await page.route('https://host.test/', route => route.fulfill({
       body: `
-        <iframe src="https://datalens.test/page?theme=dark&lang=ru"
+        <iframe src="https://datalens.test/page?theme=dark&lang=ru&standaloneWorkerAudit=1"
                 sandbox="allow-scripts" allow="" referrerpolicy="no-referrer"></iframe>
         <script>
           window.hostMessages = [];
@@ -101,6 +101,14 @@ test.describe('standalone single-file build', () => {
         return error instanceof DOMException && error.name === 'SecurityError';
       }
     })).toBe(true);
+
+    await expect.poll(() => frame.locator('html').evaluate(() => Boolean(window.__IT_TOOLS_STANDALONE_WORKER_AUDIT__)), {
+      timeout: 60_000,
+    }).toBe(true);
+    const workerAudit = await frame.locator('html').evaluate(() => window.__IT_TOOLS_STANDALONE_WORKER_AUDIT__!.runAll());
+    expect(workerAudit.expected).toBe(48);
+    expect(workerAudit.failed, JSON.stringify(workerAudit.results.filter(result => result.error), null, 2)).toBe(0);
+    expect(workerAudit.passed).toBe(workerAudit.expected);
 
     await frame.locator('html').evaluate(() => {
       location.hash = '#/json-to-csv';

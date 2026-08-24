@@ -9,10 +9,12 @@ The generated registry contains 133 lazy routes. The accepted normal build on
 budget checks passed with unique tool icons preserved.
 
 The accepted standalone artifact contains 126 tools in one HTML file. It is
-7,587,222 bytes (7.24 MiB); the JSON upload envelope `{ "html": ... }` is
-7,589,273 bytes. Both are below the strict 10 MiB limit. The build fails if
+7,989,122 bytes (7.62 MiB); the JSON upload envelope `{ "html": ... }` is
+7,991,173 bytes. Both are below the strict 10 MiB limit. The build fails if
 either measurement exceeds that limit and always removes its intermediate
-directory to prevent stale-build reuse.
+directory to prevent stale-build reuse. The increase records the exhaustive
+standalone-only 48-client compatibility audit and its small XLSX fixture; it
+does not enter the normal application build.
 
 Production large-result fixtures for SQL, JSON-to-CSV, JSON Minify, and List
 Converter publish bounded previews while Copy/Blob download retains the full

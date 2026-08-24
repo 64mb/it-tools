@@ -20,6 +20,10 @@ function toDataUrl(fileName, source) {
   return `data:${mimeType};base64,${asBuffer(source).toString('base64')}`;
 }
 
+export function isStandaloneWorkerAssetFileName(fileName) {
+  return /\.worker-[a-f\d]{8}\.js$/iu.test(fileName);
+}
+
 function replaceAssetReferences(source, replacements) {
   if (replacements.size === 0) return source;
   const pattern = new RegExp([...replacements.keys()]
@@ -64,7 +68,8 @@ function installInlineWorkerShim() {
       if (!match) throw new Error('The standalone worker source is invalid.');
       const bytes = Uint8Array.from(atob(match[1]), character => character.charCodeAt(0));
       const source = new TextDecoder().decode(bytes);
-      const scope = Object.create(globalThis);
+      const host = globalThis;
+      const scope = Object.create(host);
       this.scope = scope;
 
       const addWorkerListener = (type, listener) => {
@@ -81,8 +86,16 @@ function installInlineWorkerShim() {
 
       Object.defineProperties(scope, {
         addEventListener: { configurable: true, value: addWorkerListener, writable: true },
+        atob: { configurable: true, value: host.atob.bind(host), writable: false },
+        btoa: { configurable: true, value: host.btoa.bind(host), writable: false },
+        crypto: { configurable: true, value: host.crypto, writable: false },
         close: { configurable: true, value: close, writable: true },
+        isSecureContext: { configurable: true, value: host.isSecureContext, writable: false },
+        location: { configurable: true, value: host.location, writable: false },
+        navigator: { configurable: true, value: host.navigator, writable: false },
         onmessage: { configurable: true, value: null, writable: true },
+        origin: { configurable: true, value: host.origin, writable: false },
+        performance: { configurable: true, value: host.performance, writable: false },
         postMessage: { configurable: true, value: postToMain, writable: true },
         removeEventListener: { configurable: true, value: removeWorkerListener, writable: true },
       });

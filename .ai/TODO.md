@@ -1,7 +1,7 @@
 # Approved Work
 
-There is no remaining approved implementation or feature backlog as of
-2026-08-16. Do not invent additional tools or revive removed upstream lists.
+There is no remaining approved feature backlog. Do not invent additional tools
+or revive removed upstream lists.
 
 Future work begins only from an explicit user request or a locally reproduced
 regression. Before implementation, record the narrow scope here, including any

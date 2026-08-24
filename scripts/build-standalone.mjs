@@ -4,7 +4,7 @@ import process from 'node:process';
 
 import { build as buildWithVite } from 'vite';
 import { generateStandaloneToolRegistry } from './standalone-build-config.mjs';
-import { inlineStandaloneBundle } from './standalone-build-plugin.mjs';
+import { inlineStandaloneBundle, isStandaloneWorkerAssetFileName } from './standalone-build-plugin.mjs';
 
 const MAX_STANDALONE_BYTES = 10 * 1024 * 1024;
 const outputDirectory = resolve('dist-standalone');
@@ -49,7 +49,7 @@ async function createSingleFileBundle() {
     if (fileName === 'index.html' || fileName === 'manifest.json') {
       continue;
     }
-    if (fileName.endsWith('.js') && !fileName.includes('.worker-')) {
+    if (fileName.endsWith('.js') && !isStandaloneWorkerAssetFileName(fileName)) {
       bundle[fileName] = {
         code: await readFile(path, 'utf8'),
         fileName,

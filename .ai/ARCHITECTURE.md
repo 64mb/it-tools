@@ -54,5 +54,12 @@ in memory, and sends downloads and external links to the parent through
 `EXPORT` and `OPEN_URL` messages. None of these choices affect the normal
 `dist/` build.
 
+Standalone worker compatibility is executable policy: the CSP sandbox test
+runs a valid operation through all 48 included worker clients in Chromium,
+Firefox, and WebKit, while a source-inventory test requires exact case coverage.
+The emulated scope owns receiver-sensitive Web APIs and the packager classifies
+only `*.worker-<hash>.js` as worker programs; `*.worker-client-<hash>.js` remains
+part of the AMD lazy module graph.
+
 The local fork is authoritative. Upstream material is research only and must
 not be merged or adapted without an explicit approved record in `TODO.md`.
