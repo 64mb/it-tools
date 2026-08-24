@@ -30,6 +30,17 @@ describe('CInputText', () => {
     expect(wrapper.get('.input').attributes('placeholder')).to.equal('Placeholder');
   });
 
+  it.each([false, true])('forwards an accessible name to the native control when multiline is %s', (multiline) => {
+    const wrapper = shallowMount(CInputText, {
+      props: {
+        ariaLabel: 'Generated value',
+        multiline,
+      },
+    });
+
+    expect(wrapper.get(multiline ? 'textarea' : 'input').attributes('aria-label')).toBe('Generated value');
+  });
+
   it('Renders a value', () => {
     const wrapper = shallowMount(CInputText, {
       props: {
@@ -38,6 +49,26 @@ describe('CInputText', () => {
     });
 
     expect(wrapper.vm.value).to.equal('Value');
+  });
+
+  it('uses the intended native input size without treating it as a visual utility', () => {
+    const wrapper = shallowMount(CInputText);
+
+    expect(wrapper.get('input').attributes('size')).to.equal('1');
+  });
+
+  it.each([false, true])('forwards native text-entry bounds when multiline is %s', (multiline) => {
+    const wrapper = shallowMount(CInputText, {
+      props: {
+        inputmode: 'numeric',
+        maxlength: 5,
+        multiline,
+      },
+    });
+    const input = wrapper.get(multiline ? 'textarea' : 'input');
+
+    expect(input.attributes('inputmode')).toBe('numeric');
+    expect(input.attributes('maxlength')).toBe('5');
   });
 
   it('Renders a provided id', () => {
@@ -78,6 +109,59 @@ describe('CInputText', () => {
     const feedback = wrapper.find('.feedback');
     expect(feedback.exists()).to.equal(true);
     expect(feedback.text()).to.equal('Message');
+  });
+
+  it('associates invalid feedback with the native control', () => {
+    const wrapper = mount(CInputText, {
+      props: {
+        id: 'validated-input',
+        validationRules: [{ validator: () => false, message: 'Invalid value' }],
+      },
+    });
+    const input = wrapper.get('input');
+    const feedback = wrapper.get('.feedback');
+
+    expect(input.attributes('aria-invalid')).toBe('true');
+    expect(input.attributes('aria-describedby')).toBe('validated-input-feedback');
+    expect(feedback.attributes('id')).toBe('validated-input-feedback');
+    expect(feedback.attributes('role')).toBe('alert');
+  });
+
+  it('labels clear and password actions and keeps disabled values immutable', async () => {
+    const wrapper = mount(CInputText, {
+      props: {
+        value: 'secret',
+        type: 'password',
+        clearable: true,
+        disabled: true,
+      },
+    });
+    const [clearButton, passwordButton] = wrapper.findAll('button');
+
+    expect(clearButton.attributes('aria-label')).toBe('Clear input');
+    expect(passwordButton.attributes('aria-label')).toBe('Show password');
+    expect(passwordButton.attributes('aria-pressed')).toBe('false');
+    expect(clearButton.attributes('disabled')).toBeDefined();
+    expect(passwordButton.attributes('disabled')).toBeDefined();
+
+    await clearButton.trigger('click');
+    await passwordButton.trigger('click');
+
+    expect(wrapper.emitted('update:value')).toBeUndefined();
+    expect(wrapper.get('input').attributes('type')).toBe('password');
+  });
+
+  it('announces the active password visibility state', async () => {
+    const wrapper = mount(CInputText, {
+      props: { value: 'secret', type: 'password' },
+    });
+    const passwordButton = wrapper.get('button');
+
+    await passwordButton.trigger('click');
+
+    expect(passwordButton.attributes('aria-label')).toBe('Hide password');
+    expect(passwordButton.attributes('aria-pressed')).toBe('true');
+    expect(wrapper.get('input').attributes('type')).toBe('text');
   });
 
   it('if the value become valid according to rules, the feedback disappear', async () => {

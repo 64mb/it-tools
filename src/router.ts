@@ -1,16 +1,13 @@
-import { createRouter, createWebHistory } from 'vue-router';
-import { layouts } from './layouts/index';
-import HomePage from './pages/Home.page.vue';
-import NotFound from './pages/404.page.vue';
-import { tools } from './tools';
+import { createRouter, createWebHashHistory, createWebHistory } from 'vue-router';
+import { tools } from '@tool-registry';
 import { config } from './config';
-import { routes as demoRoutes } from './ui/demo/demo.routes';
+import { applyRouteDocumentMetadata } from './modules/document-metadata';
 
 const toolsRoutes = tools.map(({ path, name, component, ...config }) => ({
   path,
   name,
   component,
-  meta: { isTool: true, layout: layouts.toolLayout, name, ...config },
+  meta: { isTool: true, name, ...config },
 }));
 const toolsRedirectRoutes = tools
   .filter(({ redirectFrom }) => redirectFrom && redirectFrom.length > 0)
@@ -19,12 +16,14 @@ const toolsRedirectRoutes = tools
   );
 
 const router = createRouter({
-  history: createWebHistory(config.app.baseUrl),
+  history: import.meta.env.STANDALONE
+    ? createWebHashHistory()
+    : createWebHistory(config.app.baseUrl),
   routes: [
     {
       path: '/',
       name: 'home',
-      component: HomePage,
+      component: () => import('./pages/Home.page.vue'),
     },
     {
       path: '/about',
@@ -33,9 +32,12 @@ const router = createRouter({
     },
     ...toolsRoutes,
     ...toolsRedirectRoutes,
-    ...(config.app.env === 'development' ? demoRoutes : []),
-    { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFound },
+    { path: '/:pathMatch(.*)*', name: 'NotFound', component: () => import('./pages/404.page.vue') },
   ],
+});
+
+router.afterEach((route) => {
+  applyRouteDocumentMetadata(document, route);
 });
 
 export default router;

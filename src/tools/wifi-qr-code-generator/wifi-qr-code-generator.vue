@@ -5,6 +5,8 @@ import {
   useWifiQRCode,
 } from './useQRCode';
 import { useDownloadFileFromBase64 } from '@/composable/downloadBase64';
+import CColorPicker from '@/ui/c-color-picker/c-color-picker.vue';
+import InputCopyable from '@/components/InputCopyable.vue';
 
 const foreground = ref('#000000ff');
 const background = ref('#ffffffff');
@@ -17,7 +19,7 @@ const eapAnonymous = ref(false);
 const eapIdentity = ref();
 const eapPhase2Method = ref();
 
-const { qrcode, encryption } = useWifiQRCode({
+const { error, isGenerating, payload, qrcode, status, encryption } = useWifiQRCode({
   ssid,
   password,
   eapMethod,
@@ -32,21 +34,35 @@ const { qrcode, encryption } = useWifiQRCode({
   options: { width: 1024 },
 });
 
+const statusMessage = computed(() => {
+  if (error.value) {
+    return error.value;
+  }
+  if (isGenerating.value) {
+    return qrcode.value
+      ? 'Updating the WiFi QR code. The previous preview remains visible.'
+      : 'Generating the WiFi QR code…';
+  }
+  return status.value === 'ready'
+    ? 'WiFi QR code ready.'
+    : 'Complete the required WiFi fields to generate a QR code.';
+});
+
 const { download } = useDownloadFileFromBase64({ source: qrcode, filename: 'qr-code.png' });
+const personalWpa3 = computed(() => encryption.value === 'WPA3' || encryption.value === 'WPA3-TRANSITION');
 </script>
 
 <template>
-  <c-card>
-    <div grid grid-cols-1 gap-12>
-      <div>
+  <div class="c-form-layout">
+    <c-alert title="De-facto scanner payload">
+      This tool emits the ZXing-style WIFI text format, not a Wi-Fi Alliance provisioning standard. WPA3 Personal and transition selections deliberately use the broadly understood <code>T:WPA</code> token: the QR carries the SSID/password, while the access point and scanner negotiate WPA2/WPA3. A QR cannot force SAE-only policy; test the exact scanner and network before distribution.
+    </c-alert>
+    <c-card>
+      <div grid grid-cols-1 gap-4>
         <c-select
           v-model:value="encryption"
-          mb-4
           label="Encryption method"
           default-value="WPA"
-          label-position="left"
-          label-width="130px"
-          label-align="right"
           :options="[
             {
               label: 'No password',
@@ -55,6 +71,14 @@ const { download } = useDownloadFileFromBase64({ source: qrcode, filename: 'qr-c
             {
               label: 'WPA/WPA2',
               value: 'WPA',
+            },
+            {
+              label: 'WPA3 Personal (compatible payload)',
+              value: 'WPA3',
+            },
+            {
+              label: 'WPA2/WPA3 transition (compatible payload)',
+              value: 'WPA3-TRANSITION',
             },
             {
               label: 'WEP',
@@ -66,88 +90,99 @@ const { download } = useDownloadFileFromBase64({ source: qrcode, filename: 'qr-c
             },
           ]"
         />
-        <div class="mb-6 flex flex-row items-center gap-2">
-          <c-input-text
-            v-model:value="ssid"
-            label-position="left"
-            label-width="130px"
-            label-align="right"
-            label="SSID:"
-            rows="1"
-            autosize
-            placeholder="Your WiFi SSID..."
-            mb-6
-          />
-          <n-checkbox v-model:checked="isHiddenSSID">
-            Hidden SSID
-          </n-checkbox>
-        </div>
+
+        <c-input-text
+          id="wifi-ssid"
+          v-model:value="ssid"
+          label="SSID"
+          placeholder="Your WiFi SSID..."
+          :maxlength="256"
+        />
+        <CCheckbox id="wifi-hidden" v-model:checked="isHiddenSSID">
+          Hidden SSID
+        </CCheckbox>
+
         <c-input-text
           v-if="encryption !== 'nopass'"
+          id="wifi-password"
           v-model:value="password"
-          label-position="left"
-          label-width="130px"
-          label-align="right"
-          label="Password:"
-          rows="1"
-          autosize
+          label="Password"
           type="password"
           placeholder="Your WiFi Password..."
-          mb-6
+          :maxlength="2048"
         />
+        <p v-if="personalWpa3" op-75>
+          Compatibility mode selected: the encoded authentication token is <code>WPA</code>; WPA3-only enforcement remains an access-point/scanner responsibility.
+        </p>
         <c-select
           v-if="encryption === 'WPA2-EAP'"
           v-model:value="eapMethod"
           label="EAP method"
-          label-position="left"
-          label-width="130px"
-          label-align="right"
           :options="EAPMethods.map((method) => ({ label: method, value: method }))"
-          searchable mb-4
+          searchable
         />
-        <div v-if="encryption === 'WPA2-EAP'" class="mb-6 flex flex-row items-center gap-2">
+
+        <template v-if="encryption === 'WPA2-EAP'">
           <c-input-text
+            id="wifi-eap-identity"
             v-model:value="eapIdentity"
-            label-position="left"
-            label-width="130px"
-            label-align="right"
-            label="Identity:"
-            rows="1"
-            autosize
+            label="Identity"
             placeholder="Your EAP Identity..."
-            mb-6
           />
-          <n-checkbox v-model:checked="eapAnonymous">
-            Anonymous?
-          </n-checkbox>
-        </div>
+          <CCheckbox id="wifi-eap-anonymous" v-model:checked="eapAnonymous">
+            Anonymous identity
+          </CCheckbox>
+        </template>
+
         <c-select
           v-if="encryption === 'WPA2-EAP'"
           v-model:value="eapPhase2Method"
           label="EAP Phase 2 method"
-          label-position="left"
-          label-width="130px"
-          label-align="right"
           :options="EAPPhase2Methods.map((method) => ({ label: method, value: method }))"
-          searchable mb-4
+          searchable
         />
-        <n-form label-width="130" label-placement="left">
-          <n-form-item label="Foreground color:">
-            <n-color-picker v-model:value="foreground" :modes="['hex']" />
-          </n-form-item>
-          <n-form-item label="Background color:">
-            <n-color-picker v-model:value="background" :modes="['hex']" />
-          </n-form-item>
-        </n-form>
-      </div>
-      <div v-if="qrcode">
-        <div flex flex-col items-center gap-3>
-          <img alt="wifi-qrcode" :src="qrcode" width="200">
-          <c-button @click="download">
-            Download qr-code
-          </c-button>
+
+        <div grid grid-cols-1 gap-3 sm:grid-cols-2>
+          <c-field label="Foreground color" label-for="wifi-foreground-color">
+            <CColorPicker
+              id="wifi-foreground-color"
+              v-model:value="foreground"
+              aria-label="Foreground color"
+              :modes="['hex']"
+            />
+          </c-field>
+          <c-field label="Background color" label-for="wifi-background-color">
+            <CColorPicker
+              id="wifi-background-color"
+              v-model:value="background"
+              aria-label="Background color"
+              :modes="['hex']"
+            />
+          </c-field>
         </div>
       </div>
-    </div>
-  </c-card>
+    </c-card>
+
+    <p
+      class="c-task-status"
+      data-test-id="wifi-qrcode-status"
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+    >
+      {{ statusMessage }}
+    </p>
+
+    <c-card v-if="qrcode && payload" data-test-id="wifi-qrcode-result">
+      <div flex flex-col items-center gap-3>
+        <img alt="WiFi QR code" :src="qrcode" width="240">
+        <div class="c-generator-actions">
+          <c-button type="primary" :disabled="isGenerating" @click="download">
+            Download QR code
+          </c-button>
+        </div>
+        <InputCopyable label="Exact encoded WIFI payload (contains the password)" :value="payload" readonly monospace w-full />
+      </div>
+    </c-card>
+  </div>
 </template>

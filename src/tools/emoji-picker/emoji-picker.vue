@@ -1,86 +1,185 @@
 <script setup lang="ts">
 import emojiUnicodeData from 'unicode-emoji-json';
-import emojiKeywords from 'emojilib';
-import _ from 'lodash';
 import type { EmojiInfo } from './emoji.types';
-import { useFuzzySearch } from '@/composable/fuzzySearch';
-import useDebouncedRef from '@/composable/debouncedref';
+import { createEmojiSearchWorkerClient } from './emoji-picker.worker-client';
+import { EMOJI_SEARCH_DEBOUNCE_MS } from './emoji-picker.worker.protocol';
+import {
+  ALL_EMOJI_GROUPS,
+  EMOJI_DATASET_LABEL,
+  createEmojiCatalog,
+  filterEmojiGroup,
+  getEmojiGroups,
+} from './emoji-picker.model';
 
-const escapeUnicode = ({ emoji }: { emoji: string }) => emoji.split('').map(unit => `\\u${unit.charCodeAt(0).toString(16).padStart(4, '0')}`).join('');
-const getEmojiCodePoints = ({ emoji }: { emoji: string }) => emoji.codePointAt(0) ? `0x${emoji.codePointAt(0)?.toString(16)}` : undefined;
+const emojiCatalog = createEmojiCatalog(emojiUnicodeData);
+const emojiGroups = getEmojiGroups(emojiCatalog);
+const emojiByValue = new Map(emojiCatalog.map(info => [info.emoji, info]));
 
-const emojis = _.map(emojiUnicodeData, (emojiInfo, emoji) => ({
-  ...emojiInfo,
-  emoji,
-  title: _.capitalize(emojiInfo.name),
-  keywords: emojiKeywords[emoji as keyof typeof emojiKeywords],
-  codePoints: getEmojiCodePoints({ emoji }),
-  unicode: escapeUnicode({ emoji }),
-}));
+const searchQuery = ref('');
+const selectedGroup = ref(ALL_EMOJI_GROUPS);
+const searchResults = shallowRef<string[]>();
+const searchError = ref('');
+const isSearching = ref(false);
+const searchClient = createEmojiSearchWorkerClient();
+let searchTimer: ReturnType<typeof globalThis.setTimeout> | undefined;
+let searchRevision = 0;
 
-const emojisGroups: { emojiInfos: EmojiInfo[]; group: string }[] = _
-  .chain(emojis)
-  .groupBy('group')
-  .map((emojiInfos, group) => ({ group, emojiInfos }))
-  .value();
+const normalizedSearchQuery = computed(() => searchQuery.value.trim());
+const matchingEmojiInfos = computed(() => {
+  const query = normalizedSearchQuery.value;
+  const matchingCatalog = query
+    ? (searchResults.value ?? []).map(emoji => emojiByValue.get(emoji)).filter((info): info is EmojiInfo => info !== undefined)
+    : emojiCatalog;
 
-const searchQuery = useDebouncedRef('', 500);
-
-const { searchResult } = useFuzzySearch({
-  search: searchQuery,
-  data: emojis,
-  options: {
-    keys: ['group', { name: 'name', weight: 3 }, 'keywords', 'unicode', 'codePoints', 'emoji'],
-    threshold: 0.3,
-    useExtendedSearch: true,
-    isCaseSensitive: false,
-  },
+  return filterEmojiGroup(matchingCatalog, selectedGroup.value);
 });
+const virtualResetKey = computed(() => `${normalizedSearchQuery.value}\u0000${selectedGroup.value}`);
+
+watch(normalizedSearchQuery, (query) => {
+  if (searchTimer !== undefined) {
+    globalThis.clearTimeout(searchTimer);
+    searchTimer = undefined;
+  }
+  const currentRevision = ++searchRevision;
+  searchClient.cancel();
+  searchError.value = '';
+
+  if (!query) {
+    isSearching.value = false;
+    searchResults.value = undefined;
+    return;
+  }
+
+  isSearching.value = true;
+  searchTimer = globalThis.setTimeout(async () => {
+    searchTimer = undefined;
+    try {
+      const result = await searchClient.search(query);
+      if (currentRevision === searchRevision) {
+        searchResults.value = result.value;
+      }
+    }
+    catch {
+      if (currentRevision === searchRevision) {
+        searchResults.value = [];
+        searchError.value = 'Emoji search could not be completed. Please try again.';
+      }
+    }
+    finally {
+      if (currentRevision === searchRevision) {
+        isSearching.value = false;
+      }
+    }
+  }, EMOJI_SEARCH_DEBOUNCE_MS);
+}, { immediate: true });
+
+onScopeDispose(() => {
+  ++searchRevision;
+  if (searchTimer !== undefined) {
+    globalThis.clearTimeout(searchTimer);
+  }
+  searchClient.dispose();
+});
+
+function cancelSearch() {
+  ++searchRevision;
+  if (searchTimer !== undefined) {
+    globalThis.clearTimeout(searchTimer);
+    searchTimer = undefined;
+  }
+  searchClient.cancel();
+  isSearching.value = false;
+  searchError.value = 'Emoji search was cancelled.';
+}
 </script>
 
 <template>
   <div mx-auto max-w-2400px important:flex-1>
-    <div flex items-center gap-3>
+    <div class="emoji-picker-controls" mx-auto max-w-900px gap-3>
       <c-input-text
         v-model:value="searchQuery"
+        label="Search emojis"
         placeholder="Search emojis (e.g. 'smile')..."
-        mx-auto max-w-600px
+        test-id="emoji-search"
+        raw-text
+        clearable
       >
         <template #prefix>
           <icon-mdi-search mr-6px color-black op-70 dark:color-white />
         </template>
       </c-input-text>
-    </div>
 
-    <div v-if="searchQuery.trim().length > 0">
-      <div
-        v-if="searchResult.length === 0"
-        mt-4
-        text-20px
-        font-bold
-      >
-        No results
-      </div>
-
-      <div v-else>
-        <div mt-4 text-20px font-bold>
-          Search result
-        </div>
-
-        <emoji-grid :emoji-infos="searchResult" />
-      </div>
+      <label flex flex-col gap-5px for="emoji-group">
+        <span>Category</span>
+        <select
+          id="emoji-group"
+          v-model="selectedGroup"
+          data-test-id="emoji-category"
+          min-h-40px
+          rounded
+          border="1px solid current op-30"
+          bg-transparent
+          px-3
+        >
+          <option :value="ALL_EMOJI_GROUPS">
+            All categories
+          </option>
+          <option v-for="group in emojiGroups" :key="group" :value="group">
+            {{ group }}
+          </option>
+        </select>
+      </label>
     </div>
 
     <div
-      v-for="{ group, emojiInfos } in emojisGroups"
-      v-else
-      :key="group"
+      data-test-id="emoji-result-status"
+      mt-4
+      text-sm
+      op-70
+      aria-live="polite"
     >
-      <div mt-4 text-20px font-bold>
-        {{ group }}
-      </div>
+      {{ isSearching ? 'Searching emojis…' : `${matchingEmojiInfos.length} emojis available` }}
+    </div>
+    <div mt-1 text-xs op-60 data-test-id="emoji-dataset-version">
+      Dataset: {{ EMOJI_DATASET_LABEL }} (unicode-emoji-json, local only)
+    </div>
 
-      <emoji-grid :emoji-infos="emojiInfos" />
+    <div v-if="isSearching" mt-3>
+      <c-button data-test-id="emoji-cancel-search" @click="cancelSearch">
+        Cancel search
+      </c-button>
+    </div>
+
+    <div v-if="searchError" role="alert" mt-3>
+      {{ searchError }}
+    </div>
+
+    <div v-if="!isSearching && matchingEmojiInfos.length === 0" mt-4 text-20px font-bold role="status">
+      No results
+    </div>
+
+    <div v-else id="emoji-results" data-test-id="emoji-results" mt-4>
+      <div v-if="normalizedSearchQuery" mb-2 text-20px font-bold>
+        Search results
+      </div>
+      <emoji-virtual-grid
+        :emoji-infos="matchingEmojiInfos"
+        :reset-key="virtualResetKey"
+        :show-group-headers="!normalizedSearchQuery"
+      />
     </div>
   </div>
 </template>
+
+<style scoped>
+.emoji-picker-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(220px, 1fr);
+}
+
+@media (max-width: 640px) {
+  .emoji-picker-controls {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+</style>

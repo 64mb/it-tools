@@ -1,135 +1,134 @@
-<picture>
-    <source srcset="./.github/logo-dark.png" media="(prefers-color-scheme: light)">
-    <source srcset="./.github/logo-white.png" media="(prefers-color-scheme: dark)">
-    <img src="./.github/logo-dark.png" alt="logo">
-</picture>
+# IT Tools
 
-Useful tools for developer and people working in IT. [Have a look !](https://it-tools.tech).
+> This repository is an independently maintained and enhanced fork of [CorentinTh/it-tools](https://github.com/CorentinTh/it-tools).
 
-## Sponsors
+The current fork is developed at [64mb/it-tools](https://github.com/64mb/it-tools). It builds on the original project while adding local improvements, updated styling, and additional deployment options.
 
-[![Renderize banner](./.github/sponsor-banner.svg)](https://renderize.tech?utm_source=it-tools&utm_medium=readme)
+IT Tools is a client-side collection of utilities for developers, DevOps engineers, and other IT professionals. Tool inputs are processed locally in the browser; the application has no backend and can be deployed as static files.
 
-## Functionalities and roadmap
+## Project lineage
 
-Please check the [issues](https://github.com/CorentinTh/it-tools/issues) to see if some feature listed to be implemented.
+- **Original project:** [CorentinTh/it-tools](https://github.com/CorentinTh/it-tools), created by Corentin Thomasset and its contributors.
+- **Enhanced fork:** [64mb/it-tools](https://github.com/64mb/it-tools), independently maintained and developed from the original codebase.
 
-You have an idea of a tool? Submit a [feature request](https://github.com/CorentinTh/it-tools/issues/new/choose)!
+## Technology stack
 
-## Self host
+- Vue 3 and TypeScript
+- Vite
+- Naive UI and UnoCSS
+- Pinia and Vue Router
+- Vitest and Playwright
+- PWA/Workbox support
+- nginx for the container image
 
-Self host solutions for your homelab
+Third-party dependencies are listed in [`package.json`](package.json).
 
-**From docker hub:**
+## Development
 
-```sh
-docker run -d --name it-tools --restart unless-stopped -p 8080:80 corentinth/it-tools:latest
-```
+The supported development baseline is Node.js 24.18.0 and pnpm 9.11.0, pinned
+in `.nvmrc` and `package.json`.
 
-**From github packages:**
-
-```sh
-docker run -d --name it-tools --restart unless-stopped -p 8080:80 ghcr.io/corentinth/it-tools:latest
-```
-
-**Other solutions:**
-
-- [Cloudron](https://www.cloudron.io/store/tech.ittools.cloudron.html)
-- [Tipi](https://www.runtipi.io/docs/apps-available)
-- [Unraid](https://unraid.net/community/apps?q=it-tools)
-
-## Contribute
-
-### Recommended IDE Setup
-
-[VSCode](https://code.visualstudio.com/) with the following extensions:
-
-- [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur)
-- [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin).
-- [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint)
-- [i18n Ally](https://marketplace.visualstudio.com/items?itemName=lokalise.i18n-ally)
-
-with the following settings:
-
-```json
-{
-  "editor.formatOnSave": false,
-  "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true
-  },
-  "i18n-ally.localesPaths": ["locales", "src/tools/*/locales"],
-  "i18n-ally.keystyle": "nested"
-}
-```
-
-### Type Support for `.vue` Imports in TS
-
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin) to make the TypeScript language service aware of `.vue` types.
-
-If the standalone TypeScript plugin doesn't feel fast enough to you, Volar has also implemented a [Take Over Mode](https://github.com/johnsoncodehk/volar/discussions/471#discussioncomment-1361669) that is more performant. You can enable it by the following steps:
-
-1. Disable the built-in TypeScript Extension
-   1. Run `Extensions: Show Built-in Extensions` from VSCode's command palette
-   2. Find `TypeScript and JavaScript Language Features`, right click and select `Disable (Workspace)`
-2. Reload the VSCode window by running `Developer: Reload Window` from the command palette.
-
-### Project Setup
+### Install dependencies
 
 ```sh
-pnpm install
+nvm use
+corepack enable
+pnpm install --frozen-lockfile
 ```
 
-### Compile and Hot-Reload for Development
+### Start the development server
 
 ```sh
 pnpm dev
 ```
 
-### Type-Check, Compile and Minify for Production
+The source-served development URL is `http://127.0.0.1:8091`. It is kept on a
+different origin from production preview (`http://127.0.0.1:5050`) so an old
+PWA service worker cannot masquerade as the current source tree. If Vite's
+optimized-dependency cache is suspect, stop the server and run
+`pnpm dev:fresh`; use `pnpm test:dev-runtime` to verify the browser contract.
+
+### Run validation
+
+```sh
+pnpm lint
+pnpm typecheck
+pnpm exec vitest run --environment jsdom
+pnpm build
+```
+
+### Run end-to-end tests
+
+Install browser binaries compatible with the pinned Playwright version, then run:
+
+```sh
+pnpm test:e2e --project=chromium --reporter=line
+```
+
+## Builds
+
+### Standard static/PWA build
 
 ```sh
 pnpm build
 ```
 
-### Run Unit Tests with [Vitest](https://vitest.dev/)
+The production files are written to `dist/` and can be served by any static web server with SPA fallback enabled.
+
+## Self-hosting with Docker
+
+Build the image from the current source:
 
 ```sh
-pnpm test
+docker build -t it-tools:2.1.0 .
+docker run -d --name it-tools --restart unless-stopped --read-only --tmpfs /tmp:rw,noexec,nosuid,size=16m --cap-drop=ALL -p 8080:8080 it-tools:2.1.0
 ```
 
-### Lint with [ESLint](https://eslint.org/)
+Open `http://localhost:8080` in a browser.
 
-```sh
-pnpm lint
-```
+The container runs unprivileged and listens on port `8080` by default. Set
+`NGINX_PORT` to another unprivileged port and publish the same container port
+when a different internal port is required.
 
-### Create a new tool
+## Creating a tool
 
-To create a new tool, there is a script that generate the boilerplate of the new tool, simply run:
+Generate the initial files with:
 
 ```sh
 pnpm run script:create:tool my-tool-name
 ```
 
-It will create a directory in `src/tools` with the correct files, and a the import in `src/tools/index.ts`. You will just need to add the imported tool in the proper category and develop the tool.
+Then register the tool in the appropriate category and implement its transformation and tests.
 
-## Contributors
+## Generated OUI vendor data
 
-Big thanks to all the people who have already contributed!
+MAC Address Lookup uses the lockfile-pinned `oui-data` package only at build
+time. Its 34,503 records are committed in one deterministic compact artifact
+and loaded inside a route-local Web Worker. Every lookup therefore uses the
+same hashed worker URL: the entered MAC prefix is never encoded in a network
+request. Regenerate and verify the artifact after an intentional source-version
+change:
 
-[![contributors](https://contrib.rocks/image?repo=corentinth/it-tools&refresh=1)](https://github.com/corentinth/it-tools/graphs/contributors)
+```sh
+pnpm generate:oui-data
+pnpm test:oui-data
+```
 
-## Credits
+`pnpm build` also fails when the committed compact artifact or source metadata
+is stale.
 
-Coded with ❤️ by [Corentin Thomasset](https://corentin.tech?utm_source=it-tools&utm_medium=readme).
+## Issues and contributions
 
-This project is continuously deployed using [vercel.com](https://vercel.com).
+Bug reports and feature requests for this fork belong in the [64mb/it-tools issue tracker](https://github.com/64mb/it-tools/issues).
 
-Contributor graph is generated using [contrib.rocks](https://contrib.rocks/preview?repo=corentinth/it-tools).
+Changes should preserve client-side processing, lazy-loaded tool routes, strict TypeScript checks, and the privacy of tool input. See [`AGENTS.md`](AGENTS.md) for repository-specific engineering rules.
 
-<a href="https://www.producthunt.com/posts/it-tools?utm_source=badge-featured&utm_medium=badge&utm_souce=badge-it&#0045;tools" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=345793&theme=light" alt="IT&#0032;Tools - Collection&#0032;of&#0032;handy&#0032;online&#0032;tools&#0032;for&#0032;devs&#0044;&#0032;with&#0032;great&#0032;UX | Product Hunt" style="width: 250px; height: 54px;" width="250" height="54" /></a>
-<a href="https://www.producthunt.com/posts/it-tools?utm_source=badge-top-post-badge&utm_medium=badge&utm_souce=badge-it&#0045;tools" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/top-post-badge.svg?post_id=345793&theme=light&period=daily" alt="IT&#0032;Tools - Collection&#0032;of&#0032;handy&#0032;online&#0032;tools&#0032;for&#0032;devs&#0044;&#0032;with&#0032;great&#0032;UX | Product Hunt" style="width: 250px; height: 54px;" width="250" height="54" /></a>
+## Attribution
+
+This fork is based on the original [IT Tools project](https://github.com/CorentinTh/it-tools) by Corentin Thomasset and its contributors. Their work remains acknowledged under the project's license and Git history.
+
+The enhanced fork and its current changes are maintained at [64mb/it-tools](https://github.com/64mb/it-tools).
 
 ## License
 
-This project is under the [GNU GPLv3](LICENSE).
+This project is distributed under the [GNU General Public License v3.0](LICENSE).

@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { useStorage } from '@vueuse/core';
-import { convert } from './list-converter.models';
 import type { ConvertOptions } from './list-converter.types';
+import { createListConverterWorkerClient } from './list-converter.worker-client';
+import { LIST_CONVERTER_LIVE_MAX_BYTES, LIST_CONVERTER_MAX_INPUT_BYTES } from './list-converter.worker.protocol';
+import CSwitch from '@/ui/c-switch/c-switch.vue';
+import TextareaCopyable from '@/components/TextareaCopyable.vue';
+import { useBoundedTextTransform } from '@/composable/bounded-text-transform';
 
 const sortOrderOptions = [
   {
@@ -16,7 +20,7 @@ const sortOrderOptions = [
   },
 ];
 
-const conversionConfig = useStorage<ConvertOptions>('list-converter:conversionConfig', {
+const conversionConfig = useStorage<ConvertOptions>('it-tools:list-converter:preferences:v1', {
   lowerCase: false,
   trimItems: true,
   removeDuplicates: true,
@@ -30,94 +34,135 @@ const conversionConfig = useStorage<ConvertOptions>('list-converter:conversionCo
   separator: ', ',
 });
 
-function transformer(value: string) {
-  return convert(value, conversionConfig.value);
-}
+const source = ref('');
+const inputComponent = ref<{ inputWrapperRef?: HTMLElement }>();
+const client = createListConverterWorkerClient();
+const { cancel, hasError, isRunning, output, run, state } = useBoundedTextTransform({
+  client,
+  createTask: () => ({ options: { ...conversionConfig.value }, source: source.value }),
+  debounceMs: 250,
+  label: 'List conversion',
+  liveMaxBytes: LIST_CONVERTER_LIVE_MAX_BYTES,
+  maxInputBytes: LIST_CONVERTER_MAX_INPUT_BYTES,
+  source,
+  watchSources: [
+    source,
+    () => conversionConfig.value.itemPrefix,
+    () => conversionConfig.value.itemSuffix,
+    () => conversionConfig.value.keepLineBreaks,
+    () => conversionConfig.value.listPrefix,
+    () => conversionConfig.value.listSuffix,
+    () => conversionConfig.value.lowerCase,
+    () => conversionConfig.value.removeDuplicates,
+    () => conversionConfig.value.reverseList,
+    () => conversionConfig.value.separator,
+    () => conversionConfig.value.sortList,
+    () => conversionConfig.value.trimItems,
+  ],
+});
 </script>
 
 <template>
-  <div style="flex: 0 0 100%">
-    <div style="margin: 0 auto; max-width: 600px">
-      <c-card>
-        <div flex>
-          <div>
-            <n-form-item label="Trim list items" label-placement="left" label-width="150" :show-feedback="false" mb-2>
-              <n-switch v-model:value="conversionConfig.trimItems" />
-            </n-form-item>
-            <n-form-item label="Remove duplicates" label-placement="left" label-width="150" :show-feedback="false" mb-2>
-              <n-switch v-model:value="conversionConfig.removeDuplicates" data-test-id="removeDuplicates" />
-            </n-form-item>
-            <n-form-item
-              label="Convert to lowercase"
-              label-placement="left"
-              label-width="150"
-              :show-feedback="false"
-              mb-2
-            >
-              <n-switch v-model:value="conversionConfig.lowerCase" />
-            </n-form-item>
-            <n-form-item label="Keep line breaks" label-placement="left" label-width="150" :show-feedback="false" mb-2>
-              <n-switch v-model:value="conversionConfig.keepLineBreaks" />
-            </n-form-item>
-          </div>
-          <div flex-1>
-            <c-select
-              v-model:value="conversionConfig.sortList"
-              label="Sort list"
-              label-position="left"
-              label-width="120px"
-              label-align="right"
-              mb-2
-              :options="sortOrderOptions"
-              w-full
-              :disabled="conversionConfig.reverseList"
-              data-test-id="sortList"
-              placeholder="Sort alphabetically"
-            />
+  <div class="c-tool-workbench c-tool-stack">
+    <c-card>
+      <div grid grid-cols-1 gap-6 md:grid-cols-2>
+        <section aria-label="List behavior" flex flex-col gap-3>
+          <CSwitch id="list-trim" v-model:value="conversionConfig.trimItems" label="Trim list items" />
+          <CSwitch
+            id="list-deduplicate"
+            v-model:value="conversionConfig.removeDuplicates"
+            label="Remove duplicates"
+            test-id="removeDuplicates"
+          />
+          <CSwitch id="list-lowercase" v-model:value="conversionConfig.lowerCase" label="Convert to lowercase" />
+          <CSwitch id="list-line-breaks" v-model:value="conversionConfig.keepLineBreaks" label="Keep line breaks" />
+        </section>
 
-            <c-input-text
-              v-model:value="conversionConfig.separator"
-              label="Separator"
-              label-position="left"
-              label-width="120px"
-              label-align="right"
-              mb-2
-              placeholder=","
-            />
+        <section aria-label="List formatting" grid grid-cols-1 gap-3 sm:grid-cols-2>
+          <c-select
+            v-model:value="conversionConfig.sortList"
+            label="Sort list"
+            :options="sortOrderOptions"
+            :disabled="conversionConfig.reverseList"
+            data-test-id="sortList"
+            placeholder="Sort alphabetically"
+          />
 
-            <n-form-item label="Wrap item" label-placement="left" label-width="120" :show-feedback="false" mb-2>
-              <c-input-text
-                v-model:value="conversionConfig.itemPrefix"
-                placeholder="Item prefix"
-                test-id="itemPrefix"
-              />
-              <c-input-text
-                v-model:value="conversionConfig.itemSuffix"
-                placeholder="Item suffix"
-                test-id="itemSuffix"
-              />
-            </n-form-item>
-            <n-form-item label="Wrap list" label-placement="left" label-width="120" :show-feedback="false" mb-2>
-              <c-input-text
-                v-model:value="conversionConfig.listPrefix"
-                placeholder="List prefix"
-                test-id="listPrefix"
-              />
-              <c-input-text
-                v-model:value="conversionConfig.listSuffix"
-                placeholder="List suffix"
-                test-id="listSuffix"
-              />
-            </n-form-item>
-          </div>
-        </div>
-      </c-card>
+          <c-input-text
+            v-model:value="conversionConfig.separator"
+            label="Separator"
+            placeholder=","
+          />
+
+          <c-input-text
+            v-model:value="conversionConfig.itemPrefix"
+            label="Item prefix"
+            placeholder="Item prefix"
+            test-id="itemPrefix"
+          />
+          <c-input-text
+            v-model:value="conversionConfig.itemSuffix"
+            label="Item suffix"
+            placeholder="Item suffix"
+            test-id="itemSuffix"
+          />
+          <c-input-text
+            v-model:value="conversionConfig.listPrefix"
+            label="List prefix"
+            placeholder="List prefix"
+            test-id="listPrefix"
+          />
+          <c-input-text
+            v-model:value="conversionConfig.listSuffix"
+            label="List suffix"
+            placeholder="List suffix"
+            test-id="listSuffix"
+          />
+        </section>
+      </div>
+    </c-card>
+
+    <c-input-text
+      ref="inputComponent"
+      v-model:value="source"
+      class="c-tool-panel"
+      label="Your input data"
+      placeholder="Paste your input data here..."
+      rows="20"
+      raw-text
+      multiline
+      test-id="input"
+      monospace
+    />
+    <div class="c-task-actions">
+      <c-button type="primary" data-test-id="list-converter-run" :disabled="source === '' || isRunning" @click="run">
+        {{ isRunning ? 'Converting…' : 'Run list conversion' }}
+      </c-button>
+      <c-button v-if="isRunning" type="warning" data-test-id="list-converter-cancel" @click="cancel">
+        Cancel
+      </c-button>
     </div>
+    <p
+      v-if="state.message"
+      data-test-id="list-converter-status"
+      role="status"
+      aria-live="polite"
+      :class="{ 'status-error': hasError }"
+    >
+      {{ state.message }}
+    </p>
+    <c-field class="c-tool-panel" label="Your transformed data">
+      <TextareaCopyable
+        :value="output"
+        :large-preview-bytes="8 * 1024"
+        :follow-height-of="inputComponent?.inputWrapperRef"
+      />
+    </c-field>
   </div>
-  <format-transformer
-    input-label="Your input data"
-    input-placeholder="Paste your input data here..."
-    output-label="Your transformed data"
-    :transformer="transformer"
-  />
 </template>
+
+<style scoped>
+.status-error {
+  color: var(--n-feedback-text-color-error);
+}
+</style>

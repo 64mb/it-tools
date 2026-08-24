@@ -6,29 +6,92 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
   ci:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4
-      - run: corepack enable
-      - uses: actions/setup-node@v3
         with:
-          node-version: 20
-          cache: 'pnpm'
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: '.nvmrc'
+
+      - run: corepack enable
+
+      - name: Resolve pnpm store path
+        id: pnpm-store
+        run: echo "path=$(pnpm store path)" >> "$GITHUB_OUTPUT"
+
+      - name: Restore pnpm store
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ${{ steps.pnpm-store.outputs.path }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
-        run: pnpm i
+        run: pnpm install --frozen-lockfile
+
+      - name: Reject high or critical production dependency vulnerabilities
+        run: pnpm test:security
 
       - name: Run linters
         run: pnpm lint
 
       - name: Run unit test
-        run: pnpm test
+        run: pnpm test:unit
+
+      - name: Test build statistics
+        run: pnpm test:build-stats
+
+      - name: Verify generated OUI data
+        run: pnpm test:oui-data
 
       - name: Type check
         run: pnpm typecheck
 
       - name: Build the app
         run: pnpm build
+
+      - name: Validate build statistics against the production artifact
+        run: pnpm build:stats:check --output "$RUNNER_TEMP/build-stats.json"
+
+  container:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4
+        with:
+          persist-credentials: false
+
+      - name: Build the pinned production image
+        run: docker build --tag it-tools:smoke .
+
+      - name: Verify rootless static-delivery contracts
+        run: sh scripts/container-smoke.sh it-tools:smoke
+
+      - name: Scan the production image for fixable high and critical vulnerabilities
+        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
+        with:
+          image-ref: it-tools:smoke
+          version: v0.74.0
+          format: table
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: os,library
+          severity: HIGH,CRITICAL
+
+      - name: Build the subpath production image
+        run: docker build --build-arg BASE_URL=/it-tools/ --tag it-tools:subpath-smoke .
+
+      - name: Verify reverse-proxy and subpath contracts
+        run: sh scripts/subpath-container-smoke.sh it-tools:subpath-smoke

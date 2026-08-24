@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import _ from 'lodash';
 import { useCommandPaletteStore } from './command-palette.store';
+import {
+  activateSelectedPaletteOption,
+  clampPaletteOptionIndex,
+} from './command-palette.navigation';
 import type { PaletteOption } from './command-palette.types';
 
 const isModalOpen = ref(false);
@@ -10,7 +13,9 @@ const router = useRouter();
 const isMac = computed(() => window.navigator.userAgent.toLowerCase().includes('mac'));
 
 const commandPaletteStore = useCommandPaletteStore();
-const { searchPrompt, filteredSearchResult } = storeToRefs(commandPaletteStore);
+const { searchPrompt, filteredSearchResult, hiddenResultCount, showAllResults } = storeToRefs(commandPaletteStore);
+const flattenedOptions = computed(() => Object.values(filteredSearchResult.value).flat());
+const selectedOptionIndex = ref(0);
 
 const keys = useMagicKeys({
   passive: false,
@@ -38,9 +43,22 @@ function open() {
 function close() {
   isModalOpen.value = false;
   searchPrompt.value = '';
+  showAllResults.value = false;
+  selectedOptionIndex.value = 0;
 }
 
-const selectedOptionIndex = ref(0);
+watch(searchPrompt, () => {
+  selectedOptionIndex.value = 0;
+  showAllResults.value = false;
+});
+
+watch(showAllResults, () => {
+  selectedOptionIndex.value = 0;
+});
+
+watch(flattenedOptions, (options) => {
+  selectedOptionIndex.value = clampPaletteOptionIndex(selectedOptionIndex.value, options.length);
+}, { flush: 'sync' });
 
 function handleKeydown(event: KeyboardEvent) {
   const { key } = event;
@@ -50,30 +68,21 @@ function handleKeydown(event: KeyboardEvent) {
 
   if (isArrowUpOrDown) {
     const increment = isArrowDown ? 1 : -1;
-    const maxIndex = Math.max(_.chain(filteredSearchResult.value).values().flatten().size().value() - 1, 0);
-
-    selectedOptionIndex.value = Math.min(Math.max(selectedOptionIndex.value + increment, 0), maxIndex);
+    selectedOptionIndex.value = clampPaletteOptionIndex(
+      selectedOptionIndex.value + increment,
+      flattenedOptions.value.length,
+    );
 
     return;
   }
 
   if (isEnterPressed) {
-    const option = _.chain(filteredSearchResult.value)
-      .values()
-      .flatten()
-      .nth(selectedOptionIndex.value)
-      .value();
-
-    activateOption(option);
+    activateSelectedPaletteOption(flattenedOptions.value, selectedOptionIndex.value, activateOption);
   }
 }
 
 function getOptionIndex(option: PaletteOption) {
-  return _.chain(filteredSearchResult.value)
-    .values()
-    .flatten()
-    .findIndex(o => o === option)
-    .value();
+  return flattenedOptions.value.indexOf(option);
 }
 
 function activateOption(option: PaletteOption) {
@@ -89,7 +98,7 @@ function activateOption(option: PaletteOption) {
     return;
   }
 
-  const closeAfterNavigation = closeOnSelect || _.isUndefined(closeOnSelect);
+  const closeAfterNavigation = closeOnSelect ?? true;
 
   if (option.to) {
     router.push(option.to);
@@ -128,11 +137,22 @@ function activateOption(option: PaletteOption) {
       <c-input-text ref="inputRef" v-model:value="searchPrompt" raw-text placeholder="Type to search a tool or a command..." autofocus clearable />
 
       <div v-for="(options, category) in filteredSearchResult" :key="category">
-        <div ml-3 mt-3 text-sm font-bold text-primary op-60>
+        <div ml-3 mt-3 text-sm text-primary font-bold op-60>
           {{ category }}
         </div>
         <command-palette-option v-for="option in options" :key="option.name" :option="option" :selected="selectedOptionIndex === getOptionIndex(option)" @activated="activateOption" />
       </div>
+      <c-button
+        v-if="hiddenResultCount > 0 && !showAllResults"
+        data-test-id="command-palette-show-all"
+        mt-3 w-full
+        @click="showAllResults = true"
+      >
+        Show all {{ hiddenResultCount }} more results
+      </c-button>
+      <p v-else-if="searchPrompt && flattenedOptions.length === 0" role="status" mt-4 text-center op-70>
+        No matching tools or commands.
+      </p>
     </c-modal>
   </div>
 </template>

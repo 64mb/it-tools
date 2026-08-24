@@ -1,13 +1,32 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   base32toHex,
   buildKeyUri,
   generateHOTP,
+  generateSecret,
   generateTOTP,
   hexToBytes,
   verifyHOTP,
   verifyTOTP,
 } from './otp.service';
+import type { RandomValuesProvider } from '@/utils/secure-random';
+
+function sequenceRandomValues(sequence: number[]): RandomValuesProvider {
+  let offset = 0;
+
+  return (values) => {
+    for (let index = 0; index < values.length; index++) {
+      values[index] = sequence[offset % sequence.length];
+      offset++;
+    }
+
+    return values;
+  };
+}
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 describe('otp functions', () => {
   describe('hexToBytes', () => {
@@ -30,6 +49,12 @@ describe('otp functions', () => {
     it('case does not matter', () => {
       expect(base32toHex('ABC')).to.eql(base32toHex('abc'));
     });
+
+    it('rejects empty and malformed Base32 instead of silently decoding it', () => {
+      expect(() => base32toHex('')).toThrow('non-empty RFC 4648 Base32');
+      expect(() => base32toHex('ABC0')).toThrow('non-empty RFC 4648 Base32');
+      expect(() => base32toHex('A'.repeat(513))).toThrow('must not exceed 512');
+    });
   });
 
   describe('generateHOTP', () => {
@@ -40,6 +65,14 @@ describe('otp functions', () => {
       for (const [counter, code] of hotpCodes.entries()) {
         expect(generateHOTP({ key, counter })).to.eql(code);
       }
+    });
+
+    it('matches the RFC 4226 Appendix D vectors and accepts exact 64-bit counters', () => {
+      const key = 'GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ';
+      const expected = ['755224', '287082', '359152', '969429', '338314', '254676', '287922', '162583', '399871', '520489'];
+      expect(expected.map((_, counter) => generateHOTP({ key, counter: BigInt(counter) }))).toEqual(expected);
+      expect(generateHOTP({ key, counter: (1n << 64n) - 1n })).toMatch(/^\d{6}$/u);
+      expect(() => generateHOTP({ key, counter: 1n << 64n })).toThrow('2^64 - 1');
     });
   });
 
@@ -111,6 +144,10 @@ describe('otp functions', () => {
         'otpauth://totp/IT-Tools:demo-user?issuer=IT-Tools&secret=JBSWY3DPEHPK3PXP&algorithm=SHA1&digits=6&period=30',
       );
 
+      expect(buildKeyUri({ secret: 'JBSWY3DPEHPK3PXP', type: 'hotp', counter: 42n })).to.eql(
+        'otpauth://hotp/IT-Tools:demo-user?issuer=IT-Tools&secret=JBSWY3DPEHPK3PXP&algorithm=SHA1&digits=6&counter=42',
+      );
+
       expect(
         buildKeyUri({
           secret: 'JBSWY3DPEHPK3PXP',
@@ -123,6 +160,26 @@ describe('otp functions', () => {
       ).to.eql(
         'otpauth://totp/app-name:account?issuer=app-name&secret=JBSWY3DPEHPK3PXP&algorithm=algo&digits=7&period=10',
       );
+    });
+  });
+
+  describe('generateSecret', () => {
+    it('generates deterministic base32 secrets with the complete alphabet', () => {
+      const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+      const getRandomValues = sequenceRandomValues(Array.from({ length: alphabet.length }, (_, index) => index));
+
+      const secrets = generateSecret({ getRandomValues }) + generateSecret({ getRandomValues });
+
+      expect(secrets).toBe(alphabet);
+    });
+
+    it('does not use Math.random', () => {
+      const mathRandom = vi.spyOn(Math, 'random').mockImplementation(() => {
+        throw new Error('Math.random must not be used for OTP secrets');
+      });
+
+      expect(generateSecret()).toMatch(/^[A-Z2-7]{16}$/);
+      expect(mathRandom).not.toHaveBeenCalled();
     });
   });
 });

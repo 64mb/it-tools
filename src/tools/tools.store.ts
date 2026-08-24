@@ -1,41 +1,42 @@
-import { type MaybeRef, get, useStorage } from '@vueuse/core';
+import { type MaybeRef, get } from '@vueuse/core';
 import { defineStore } from 'pinia';
 import type { Ref } from 'vue';
-import _ from 'lodash';
+import { toolsByCategory as sourceToolsByCategory } from '@tool-registry';
 import type { Tool, ToolCategory, ToolWithCategory } from './tools.types';
-import { toolsWithCategory } from './index';
+import { useResilientStorage } from '@/composable/use-resilient-storage';
 
 export const useToolStore = defineStore('tools', () => {
-  const favoriteToolsName = useStorage('favoriteToolsName', []) as Ref<string[]>;
+  const favoriteToolsName = useResilientStorage('favoriteToolsName', []) as Ref<string[]>;
   const { t } = useI18n();
 
-  const tools = computed<ToolWithCategory[]>(() => toolsWithCategory.map((tool) => {
-    const toolI18nKey = tool.path.replace(/\//g, '');
+  const tools = computed<ToolWithCategory[]>(() => sourceToolsByCategory.flatMap(({ components, name: category }) => (
+    components.map((tool) => {
+      const toolI18nKey = tool.path.replace(/\//g, '');
 
-    return ({
-      ...tool,
-      path: tool.path,
-      name: t(`tools.${toolI18nKey}.title`, tool.name),
-      description: t(`tools.${toolI18nKey}.description`, tool.description),
-      category: t(`tools.categories.${tool.category.toLowerCase()}`, tool.category),
-    });
-  }));
+      return ({
+        ...tool,
+        path: tool.path,
+        name: t(`tools.${toolI18nKey}.title`, tool.name),
+        description: t(`tools.${toolI18nKey}.description`, tool.description),
+        category: t(`tools.categories.${category.toLowerCase()}`, category),
+      });
+    })
+  )));
 
   const toolsByCategory = computed<ToolCategory[]>(() => {
-    return _.chain(tools.value)
-      .groupBy('category')
-      .map((components, name, path) => ({
-        name,
-        path,
-        components,
-      }))
-      .value();
+    const grouped = new Map<string, ToolWithCategory[]>();
+    for (const tool of tools.value) {
+      const components = grouped.get(tool.category) ?? [];
+      components.push(tool);
+      grouped.set(tool.category, components);
+    }
+    return [...grouped].map(([name, components]) => ({ name, components }));
   });
 
   const favoriteTools = computed(() => {
     return favoriteToolsName.value
       .map(favoriteName => tools.value.find(({ name, path }) => name === favoriteName || path === favoriteName))
-      .filter(Boolean) as ToolWithCategory[]; // cast because .filter(Boolean) does not remove undefined from type
+      .filter((tool): tool is ToolWithCategory => tool !== undefined);
   });
 
   return {

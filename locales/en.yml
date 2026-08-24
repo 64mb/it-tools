@@ -29,21 +29,36 @@ home:
     mode: 'Toggle dark/light mode'
 about:
   content: >
-    # About IT-Tools
+    # About IT Tools
 
-    This wonderful website, made with ❤ by [Corentin Thomasset](https://corentin.tech?utm_source=it-tools&utm_medium=about) , aggregates useful tools for developer and people working in IT. If you find it useful, please feel free to share it to people you think may find it useful too and don't forget to bookmark it in your shortcut bar!
+    IT Tools is a collection of browser-based utilities for developers, DevOps engineers, and other IT professionals. Tool inputs are processed locally in the browser.
 
-    IT Tools is open-source (under the GPL-3.0 license) and free, and will always be, but it costs me money to host and renew the domain name. If you want to support my work, and encourage me to add more tools, please consider supporting by [sponsoring me](https://www.buymeacoffee.com/cthmsst).
+    The original version was created by Corentin Thomasset and is available in the [original IT Tools repository](https://github.com/CorentinTh/it-tools).
+
+    This version is an independently maintained, enhanced fork. Its improvements and current source code are available in the [64mb/it-tools repository](https://github.com/64mb/it-tools).
 
     ## Technologies
 
-    IT Tools is made in Vue.js (Vue 3) with the the Naive UI component library and is hosted and continuously deployed by Vercel. Third-party open-source libraries are used in some tools, you may find the complete list in the [package.json](https://github.com/CorentinTh/it-tools/blob/main/package.json) file of the repository.
+    The application is built with Vue 3, TypeScript, Vite, Naive UI, UnoCSS, and additional open-source libraries. The complete dependency list is available in the fork's [package.json](https://github.com/64mb/it-tools/blob/main/package.json).
 
     ## Found a bug? A tool is missing?
 
-    If you need a tool that is currently not present here, and you think can be useful, you are welcome to submit a feature request in the [issues section](https://github.com/CorentinTh/it-tools/issues/new/choose) in the GitHub repository.
+    Bug reports and feature requests for this version should be submitted through the [fork's issue tracker](https://github.com/64mb/it-tools/issues).
 
-    And if you found a bug, or something doesn't work as expected, please file a bug report in the [issues section](https://github.com/CorentinTh/it-tools/issues/new/choose) in the GitHub repository.
+    ## License
+
+    IT Tools is open-source software distributed under the [GNU GPLv3 license](https://github.com/64mb/it-tools/blob/main/LICENSE). The original project and its contributors retain attribution for their work.
+  privacy:
+    title: Privacy and saved browser data
+    description: Tool inputs are processed in this browser and are session-only by default. IT Tools saves only small preferences such as theme, formatting options, favorites, and generator settings.
+    textDiff: Text Diff content is saved only after you explicitly enable its bounded local persistence option. OTP seeds are saved only inside the explicitly created encrypted OTP vault. Other secrets, generated tokens, private keys, passwords, and uploaded files are not saved by default.
+    clearButton: Clear saved preferences and content
+    confirmButton: Clear saved data
+    cancelButton: Cancel
+    clearConfirm: Clear all browser data saved by IT Tools on this origin? Other same-origin application keys will be preserved.
+    clearSuccess: 'Cleared {count} saved IT Tools entries. Active controls may keep their current values until you reload the page.'
+    clearPartial: 'Cleared {removed} entries, but the browser denied access to {failed}. Reload the page and review browser storage permissions.'
+    clearUnavailable: The browser denied access to local storage. Review this site's storage permissions and try again.
 
 404:
   notFound: '404 Not Found'
@@ -58,6 +73,93 @@ toolCard:
 search:
   label: Search
 tools:
+  pkcs12-pem-workspace:
+    title: PKCS#12 / PEM Workspace
+    description: Inspect bounded local PFX archives, export certificates to PEM, and normalize public PEM bundles without exposing private-key material.
+  openapi-inspector:
+    title: OpenAPI Inspector
+    description: Inspect bounded local OpenAPI 3.0/3.1 JSON or YAML, list endpoints, and generate illustrative curl requests and mock payloads.
+  devops-secret-helper:
+    title: Ansible Vault & htpasswd helper
+    description: Encrypt and decrypt compatible Ansible Vault text or generate and verify modern bcrypt htpasswd entries locally
+  tabular-data-inspector:
+    title: Tabular Data Import & Inspector
+    description: Inspect or convert bounded local CSV/TSV with explicit text/type and spreadsheet-safety choices.
+  spdx-license-guidance:
+    title: SPDX & License Guidance
+    description: Browse common SPDX identifiers and triage license-family obligations locally without claiming legal advice.
+  aes-gcm-envelope:
+    title: AES-GCM Authenticated Envelope
+    description: Encrypt bounded text or local files in a versioned authenticated Web Crypto envelope without persisting passphrases.
+  image-metadata-remover:
+    title: Image Metadata Remover
+    description: Remove privacy metadata from bounded JPEG, PNG, and WebP containers locally without recompressing encoded pixels.
+  raid-storage-calculator:
+    title: RAID & Storage Capacity Calculator
+    description: Calculate exact RAID capacity, decimal-versus-binary display, overhead, efficiency, and failure tolerance locally.
+  http-request-code-builder:
+    title: HTTP Request & Code Builder
+    description: Author cURL or fetch request code and import a strict cURL subset locally without executing commands or network requests.
+  date-calendar-utilities:
+    title: Date, ISO Week & iCalendar Utilities
+    description: Convert strict ISO week dates and build or inspect bounded RFC 5545 VEVENT data locally.
+  unicode-gsm-inspector:
+    title: Unicode & GSM-7 Inspector
+    description: Inspect code points, UTF encodings, grapheme counts, normalization, and GSM-7/SMS segment estimates locally.
+  list-comparison:
+    title: List Comparison
+    description: Compare bounded line lists as sets, multisets, or ordered LCS sequences in a local disposable worker.
+  markdown-diff:
+    title: Markdown Diff
+    description: Compare bounded Markdown source locally by line or word and inspect sanitized rendered previews.
+  favicon-app-icon-generator:
+    title: Favicon & App Icon Generator
+    description: Generate bounded favicon, Apple touch, PWA, and maskable PNG icons plus a manifest and TAR bundle from a local image.
+  saml-enterprise-inspector:
+    title: SAML & Enterprise Timestamp Inspector
+    description: Decode bounded Base64 or DEFLATE SAML messages and convert FILETIME or LDAP timestamps locally with explicit trust semantics.
+  network-calculation-suite:
+    title: Network Calculation Suite
+    description: Calculate exact IPv4 and IPv6 CIDRs, exclusions, DHCP Option 43 payloads, port information, and DNS TTL durations offline.
+  dns-over-https-query:
+    title: DNS-over-HTTPS Query
+    description: Send one explicit bounded RFC 8484 wire query to a fixed browser-compatible resolver and inspect the response.
+  mermaid-diagram:
+    title: Mermaid Diagram Renderer
+    description: Explicitly render a restricted bounded Mermaid subset to sanitized isolated SVG or PNG without persisting source.
+  parquet-reader:
+    title: Parquet Reader
+    description: Inspect bounded local Apache Parquet metadata and export a selected row page as JSON or CSV without uploading the file.
+  xlsx-reader:
+    title: XLSX Spreadsheet Reader
+    description: Inspect a bounded local macro-free XLSX workbook and export one selected worksheet page as conservative JSON or CSV.
+  developer-text-workspace:
+    title: Developer Text Workspace
+    description: Format stack traces, replace text, render folder trees, and build Markdown tables of contents in a bounded local worker.
+  qr-decoder-otp-import:
+    title: QR Decoder & OTP Import
+    description: Decode QR images or explicit camera frames locally and inspect bounded TOTP/HOTP provisioning URIs without persistence.
+  ed25519-key-workspace:
+    title: Ed25519 & SSH Key Workspace
+    description: Generate ephemeral Ed25519 keys, OpenSSH public keys, and SHA-256 fingerprints locally with Web Crypto.
+  json-code-generator:
+    title: JSON Schema & Code Generator
+    description: Infer schema/types/stats or generate a bounded lossless-number RFC 6902 JSON Patch locally.
+  local-file-inspector:
+    title: Local File Inspector
+    description: Detect local files by magic bytes, calculate streaming CRC-32, and view a bounded hex preview without uploading content.
+  certificate-inspector:
+    title: Certificate & CSR Inspector
+    description: Inspect bounded X.509, PKCS#10 CSR, and public-key PEM structures locally without uploading or storing key material.
+  json-repair-query:
+    title: JSON Repair & Query
+    description: Repair common JSON5-style syntax or extract data with a bounded JSONPath subset that never executes JavaScript.
+  devops-config-workspace:
+    title: DevOps Configuration Workspace
+    description: Locally lint/format common DevOps files and export selected JSON, YAML, or TOML values as bounded shell-safe .env assignments.
+  cli-command-editor:
+    title: CLI Command Editor
+    description: Parse, inspect, edit, and safely re-quote POSIX shell or PowerShell commands without executing them
   categories:
     favorite-tools: 'Your favorite tools'
     crypto: Crypto
@@ -75,13 +177,41 @@ tools:
     title: Password strength analyser
     description: Discover the strength of your password with this client-side-only password strength analyser and crack time estimation tool.
 
+  file-hash:
+    title: File hash
+    description: Calculate SHA-2, SHA-3, BLAKE3, SHA-1, and MD5 checksums for a local file without uploading it.
+
+  local-encrypted-otp-vault:
+    title: Local encrypted OTP vault
+    description: Store TOTP entries in one opt-in Web Crypto encrypted IndexedDB vault without accounts or synchronization.
+
+  ipv6-calculator:
+    title: IPv6 calculator
+    description: Expand, compress, inspect, test, and split IPv6 CIDR networks with exact 128-bit calculations.
+
+  offline-geoip-inspector:
+    title: Offline GeoIP inspector
+    description: Estimate the country for an IPv4 or IPv6 address using a bundled static dataset without API requests.
+
+  sensitive-data-masker:
+    title: Sensitive data masker
+    description: Redact secrets and selected personal data from text, JSON, and HAR files locally before sharing them.
+
+  timezone-duration-calculator:
+    title: Timezone and date duration calculator
+    description: Convert local date-times between IANA timezones and calculate exact elapsed durations with DST ambiguity guidance.
+
+  barcode-generator-reader:
+    title: Barcode generator and reader
+    description: Generate Code 128, EAN-13, and UPC-A SVG barcodes or read supported barcodes from local images in your browser.
+
   chronometer:
     title: Chronometer
     description: Monitor the duration of a thing. Basically a chronometer with simple chronometer features.
 
   token-generator:
     title: Token generator
-    description: Generate random string with the chars you want, uppercase or lowercase letters, numbers and/or symbols.
+    description: Generate bounded Web Crypto token batches with category, custom alphabet, and denied-character controls.
 
     uppercase: Uppercase (ABC...)
     lowercase: Lowercase (abc...)
@@ -93,6 +223,42 @@ tools:
     button:
       copy: Copy
       refresh: Refresh
+      generate: Generate
+
+  nanoid-generator:
+    title: NanoID generator
+    description: Generate compact identifiers locally, URL-safe by default, with secure browser randomness and collision guidance.
+    length: Length
+    quantity: Quantity
+    customAlphabet: Use a custom alphabet
+    alphabet: Alphabet
+    limitHelp: Length multiplied by quantity may not exceed {total} symbols. Setting changes apply only after selecting Generate.
+    invalidConfiguration: Invalid configuration
+    alphabetSize: Alphabet size
+    entropy: Entropy per identifier
+    namespace: Possible identifiers
+    batchCollision: Current batch collision probability
+    onePercentThreshold: Identifiers at approximately 1% collision risk
+    fewerThanTwo: Fewer than 2 identifiers (the space is already too small)
+    collisionDisclaimer: Estimates assume independent, uniformly random identifiers in one shared namespace. They are guidance, not a uniqueness guarantee.
+    highCollisionRisk: High collision risk
+    highCollisionRiskHelp: Increase the alphabet or identifier length before using this configuration.
+    previousSettings: Output uses previous settings
+    previousSettingsHelp: Select Generate to apply the current settings. Existing identifiers remain available until then.
+    outputPlaceholder: Generated NanoIDs will appear here
+    generate: Generate
+    copy: Copy
+    download: Download
+    clear: Clear
+    copied: NanoIDs copied to the clipboard
+    validation:
+      numberRequired: Length and quantity are required.
+      invalid: The NanoID configuration is invalid.
+      generationFailed: NanoID generation failed.
+
+  mock-data-generator:
+    title: Mock data generator
+    description: Generate reproducible people, addresses, dates, internet values, identifiers, and JSON or CSV fixtures locally in your browser.
   percentage-calculator:
     title: Percentage calculator
     description: Easily calculate percentages from a value to another value, or from a percentage to a value.
@@ -119,11 +285,15 @@ tools:
 
   color-converter:
     title: Color converter
-    description: Convert color between the different formats (hex, rgb, hsl and css name)
+    description: Convert between hex, RGB, HSL, CSS names, and perceptual OKLCH with explicit sRGB gamut mapping.
 
   bcrypt:
     title: Bcrypt
     description: Hash and compare text string using bcrypt. Bcrypt is a password-hashing function based on the Blowfish cipher.
+
+  argon2id-hash-verify:
+    title: Argon2id Hash & Verify
+    description: Hash passwords into bounded Argon2id v=19 PHC strings or verify them locally in a disposable WASM worker.
 
   crontab-generator:
     title: Crontab generator
@@ -151,7 +321,7 @@ tools:
 
   encryption:
     title: Encrypt / decrypt text
-    description: Encrypt clear text and decrypt ciphertext using crypto algorithms like AES, TripleDES, Rabbit or RC4.
+    description: Read or write legacy CryptoJS/OpenSSL password envelopes; prefer the authenticated AES-GCM Envelope for new data.
 
   random-port-generator:
     title: Random port generator
@@ -171,7 +341,7 @@ tools:
 
   hmac-generator:
     title: Hmac generator
-    description: Computes a hash-based message authentication code (HMAC) using a secret key and your favorite hashing function.
+    description: Compute a bounded local HMAC in a worker with explicit UTF-8, hex, or canonical Base64 key bytes.
 
   bip39-generator:
     title: BIP39 passphrase generator
@@ -229,6 +399,10 @@ tools:
     title: JSON prettify and format
     description: Prettify your JSON string into a friendly, human-readable format.
 
+  json-schema-validator:
+    title: JSON Schema validator
+    description: Validate a JSON instance against JSON Schema Draft 7, 2019-09, or 2020-12 locally in your browser.
+
   docker-run-to-docker-compose-converter:
     title: Docker run to Docker compose converter
     description: Transforms "docker run" commands into docker-compose files!
@@ -255,7 +429,7 @@ tools:
 
   wifi-qrcode-generator:
     title: WiFi QR Code generator
-    description: Generate and download QR codes for quick connections to WiFi networks.
+    description: Generate local de-facto WiFi QR payloads for open, WEP, WPA/WPA2/WPA3-intent, and WPA2-EAP networks.
 
   xml-formatter:
     title: XML formatter
@@ -267,7 +441,7 @@ tools:
 
   chmod-calculator:
     title: Chmod calculator
-    description: Compute your chmod permissions and commands with this online chmod calculator.
+    description: Parse and compute rwx, setuid, setgid, sticky, octal, symbolic, and creation-umask permissions locally.
 
   rsa-key-pair-generator:
     title: RSA key pair generator
@@ -290,8 +464,8 @@ tools:
     description: Compare two JSON objects and get the differences between them.
 
   jwt-parser:
-    title: JWT parser
-    description: Parse and decode your JSON Web Token (jwt) and display its content.
+    title: JWT Author, Sign & Verify
+    description: Decode untrusted JWT content or explicitly author, sign, and verify bounded HMAC JWTs locally.
 
   date-converter:
     title: Date-time converter
@@ -343,15 +517,15 @@ tools:
 
   base-converter:
     title: Integer base converter
-    description: Convert a number between different bases (decimal, hexadecimal, binary, octal, base64, ...)
+    description: Convert exact signed integers between bases 2–64 with common binary, octal, decimal, and hexadecimal notation.
 
   yaml-to-json-converter:
     title: YAML to JSON converter
     description: Simply convert YAML to JSON with this online live converter.
 
   uuid-generator:
-    title: UUIDs generator
-    description: A Universally Unique Identifier (UUID) is a 128-bit number used to identify information in computer systems. The number of possible UUIDs is 16^32, which is 2^128 or about 3.4x10^38 (which is a lot!).
+    title: UUID & Identifier Workspace
+    description: Generate UUID v1/v3/v4/v5/v6/v7 values and locally normalize or inspect UUID, Mongo ObjectID, and Snowflake identifiers.
 
   ipv4-address-converter:
     title: IPv4 address converter
@@ -380,14 +554,47 @@ tools:
   text-diff:
     title: Text diff
     description: Compare two texts and see the differences between them.
+    persistenceLabel: Remember text on this device
+    persistenceHint: Disabled by default. When enabled, each side is saved locally after a short delay and limited to 256 KiB. Tool content is never sent to a server.
+    clearSavedContent: Clear saved text
+    persistenceCleared: Saved Text Diff content was cleared.
+    persistenceError: Browser storage is unavailable.
+
+  passphrase-generator:
+    title: Passphrase Generator
+    description: Generate secure, ephemeral word-based passphrases locally with Web Crypto and explicit entropy guidance.
+
+  gzip-converter:
+    title: GZIP String & File Converter
+    description: Compress or decompress bounded text and local files with the browser-native streaming GZIP API.
+
+  idn-safety-converter:
+    title: Punycode & IDN Safety Converter
+    description: Convert Unicode and ASCII domain labels locally and flag mixed-script or confusable-character risks.
+
+  data-units-converter:
+    title: Data Storage & Transfer Units
+    description: Convert bits, bytes, SI, and IEC units exactly and estimate transfer duration without floating-point loss.
+
+  markdown-table-generator:
+    title: Markdown Table Generator
+    description: Convert bounded CSV or TSV input into escaped, aligned Markdown tables in a disposable worker.
+
+  ieee754-inspector:
+    title: IEEE-754 Float Inspector
+    description: Inspect binary32 and binary64 sign, exponent, fraction, bytes, exact stored values, and rounding error.
+
+  conventional-commit-helper:
+    title: Conventional Commit Helper
+    description: Author and validate a Conventional Commit message locally with breaking-change and footer guidance.
 
   otp-generator:
     title: OTP code generator
     description: Generate and validate time-based OTP (one time password) for multi-factor authentication.
 
   url-encoder:
-    title: Encode/decode URL-formatted strings
-    description: Encode text to URL-encoded format (also known as "percent-encoded"), or decode from it.
+    title: URL Safety & Authoring Workspace
+    description: Encode and decode URL text, remove known trackers, defang/refang links, and author UTM or text-fragment URLs locally.
 
   text-to-binary:
     title: Text to ASCII binary
