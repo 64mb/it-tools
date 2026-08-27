@@ -7,6 +7,7 @@ export const STANDALONE_EXCLUDED_TOOL_DIRECTORIES = [
   'camera-recorder',
   'dns-over-https-query',
   'local-encrypted-otp-vault',
+  'local-llm-playground',
   'mermaid-diagram',
   'offline-geoip-inspector',
   'pdf-signature-checker',

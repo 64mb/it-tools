@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "models": [
+    {
+      "key": "lite",
+      "modelId": "onnx-community/Qwen3.5-0.8B-ONNX-OPT",
+      "revision": "fafab72d87a9e6be3925b38caf48286d2838f2d0",
+      "files": [
+        "chat_template.jinja",
+        "config.json",
+        "generation_config.json",
+        "tokenizer.json",
+        "tokenizer_config.json",
+        "onnx/decoder_model_merged_q4.onnx",
+        "onnx/decoder_model_merged_q4.onnx_data",
+        "onnx/embed_tokens_q4.onnx",
+        "onnx/embed_tokens_q4.onnx_data"
+      ]
+    },
+    {
+      "key": "standard",
+      "modelId": "onnx-community/Qwen3.5-2B-ONNX-OPT",
+      "revision": "2ea7886f48b926aca97de8b0e041ffca7e3ebaa9",
+      "files": [
+        "chat_template.jinja",
+        "config.json",
+        "generation_config.json",
+        "tokenizer.json",
+        "tokenizer_config.json",
+        "onnx/decoder_model_merged_q4.onnx",
+        "onnx/decoder_model_merged_q4.onnx_data",
+        "onnx/embed_tokens_q4.onnx",
+        "onnx/embed_tokens_q4.onnx_data"
+      ]
+    },
+    {
+      "key": "quality",
+      "modelId": "onnx-community/Qwen3.5-4B-ONNX-OPT",
+      "revision": "57b13b4dce7be073be0df3eaf1c842a6bbb2e0a7",
+      "files": [
+        "chat_template.jinja",
+        "config.json",
+        "generation_config.json",
+        "tokenizer.json",
+        "tokenizer_config.json",
+        "onnx/decoder_model_merged_q4.onnx",
+        "onnx/decoder_model_merged_q4.onnx_data",
+        "onnx/decoder_model_merged_q4.onnx_data_1",
+        "onnx/embed_tokens_q4.onnx",
+        "onnx/embed_tokens_q4.onnx_data"
+      ]
+    }
+  ]
+}

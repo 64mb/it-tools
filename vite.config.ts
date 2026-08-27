@@ -42,6 +42,7 @@ const figletVersion = readPackageVersion(figletPackageJsonPath);
 const figletFontAssetDirectory = `assets/figlet-fonts-${figletVersion}`;
 const lazyAssetCacheName = 'it-tools-lazy-assets-v1';
 const figletFontCacheName = `figlet-fonts-${figletVersion}`;
+const localLlmModelAssetDirectory = 'assets/local-llm-models';
 const normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
 const figletFontPublicPath = `${normalizedBaseUrl}${figletFontAssetDirectory}`;
 const geoIpPublicDirectory = resolve(__dirname, 'public/assets/geoip');
@@ -455,7 +456,10 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globIgnores: [`${figletFontAssetDirectory}/**/*`],
+        globIgnores: [
+          `${figletFontAssetDirectory}/**/*`,
+          `${localLlmModelAssetDirectory}/**/*`,
+        ],
         cleanupOutdatedCaches: true,
         manifestTransforms: [
           async (entries) => {

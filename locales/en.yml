@@ -259,6 +259,9 @@ tools:
   mock-data-generator:
     title: Mock data generator
     description: Generate reproducible people, addresses, dates, internet values, identifiers, and JSON or CSV fixtures locally in your browser.
+  local-llm-playground:
+    title: Local LLM playground
+    description: Run Qwen3.5 Lite, Standard, or Quality entirely in your browser with WebGPU, streaming output, and removable local model caches.
   percentage-calculator:
     title: Percentage calculator
     description: Easily calculate percentages from a value to another value, or from a percentage to a value.

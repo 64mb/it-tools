@@ -34,5 +34,9 @@ coverage
 /test-results/
 /playwright-report/
 /playwright/.cache/
+# Generated, pinned Local LLM weights; keep the small tracked README only.
+/public/assets/local-llm-models/*/
+/public/assets/local-llm-models/.download-manifest.json
+/public/assets/local-llm-models/*.part
 # Webkit with playwright creates a salt file
 salt
