@@ -11,7 +11,14 @@ export interface LocalLlmModel {
   summary: string
 }
 
-const GIB = 1024 ** 3;
+const KIB = 1024;
+const MIB = KIB ** 2;
+const GIB = KIB ** 3;
+
+function formatBinaryUnit(bytes: number, unitBytes: number, suffix: string): string {
+  const value = bytes / unitBytes;
+  return `${Number(value.toFixed(value < 10 ? 1 : 0))} ${suffix}`;
+}
 
 export const LOCAL_LLM_MODELS = [
   {
@@ -84,5 +91,11 @@ export function formatLocalLlmBytes(bytes: number): string {
   if (bytes >= GIB) {
     return `${(bytes / GIB).toFixed(1)} GiB`;
   }
-  return `${Math.round(bytes / 1024 ** 2)} MiB`;
+  if (bytes >= MIB) {
+    return formatBinaryUnit(bytes, MIB, 'MiB');
+  }
+  if (bytes >= KIB) {
+    return formatBinaryUnit(bytes, KIB, 'KiB');
+  }
+  return `${Math.round(bytes)} B`;
 }
