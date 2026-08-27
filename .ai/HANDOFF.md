@@ -3,7 +3,7 @@
 ## State
 
 The final approved product package is implemented. There is no remaining
-feature plan. The application is a browser-only static SPA/PWA with 133 lazy
+feature plan. The application is a browser-only static SPA/PWA with 134 lazy
 tool routes, generated from per-tool typed metadata. Unique tool icons are a
 product requirement and are preserved by the registry generator.
 
@@ -11,10 +11,11 @@ The repository may be intentionally dirty; inspect `git status` and never
 overwrite unrelated local-fork work. Do not merge, rebase, or cherry-pick
 upstream automatically.
 
-Current checkpoint: branch `feat-ai-research`, base commit
-`2530780ffb46bd309172aa21ff38d0881cd45cd1`. The 2026-08-24 standalone worker
-compatibility audit is present as uncommitted local work at handoff time; keep
-the whole worktree together when committing or transferring it.
+Current checkpoint: branch `feat/ai-tools-local-llm-1842`, based on commit
+`5395615c0c9537ebf78b20e6c7b275f4ab3fa794`. The branch tip packages the final
+approved browser-tool catalog, persistence/UI/performance work, standalone
+delivery, and the 2026-08-27 Local LLM same-origin model mirror. Keep the whole
+branch together when reviewing or transferring it.
 
 ## Resume
 
@@ -38,8 +39,8 @@ the touched surface.
 
 ## Standalone/DataLens
 
-The final artifact is `dist-standalone/it-tools.html`: one 7,989,122-byte file
-(7.62 MiB; 7,991,173-byte JSON upload envelope) with 126 tools and no runtime
+The final artifact is `dist-standalone/it-tools.html`: one 7,994,866-byte file
+(7.62 MiB; 7,996,917-byte JSON upload envelope) with 126 tools and no runtime
 network resources. `pnpm test:standalone` rebuilds it from current sources and
 runs Chromium, Firefox, and WebKit serially.
 
@@ -62,11 +63,26 @@ plain router-link menu is intentional; the normal application still uses
 `NMenu`. Do not add intermediate-reuse flags to the build—the fresh build and
 unconditional cleanup are part of the stale-cache defense.
 
-Green gates for the 2026-08-24 audit: `pnpm test:standalone` (4 Node tests and
-6 Playwright tests; 48/48 worker operations in Chromium, Firefox, and WebKit),
-`pnpm lint`, `pnpm test:unit` (262 files / 1,466 tests), and `pnpm build`.
-The final normal build restored full generated component declarations, including
-the camera-specific icons excluded only from standalone.
+Local LLM Playground is normal-build-only. It provides fixed Qwen3.5 Lite 0.8B,
+Standard 2B, and Quality 4B q4 text models through a lazy Transformers.js 4.2.0
+WebGPU worker with explicit download, storage/hardware preflight, streaming,
+cancellation, bounds, unload, and scoped cache deletion. Prompts and output are
+ephemeral. The 23.6 MB raw inference WASM and 4.98 GiB pinned q4 mirror are
+absent from shell, Workbox, and standalone. Runtime requests use only the
+same-origin revision path; Hugging Face fallback is disabled. The generated
+mirror is intentionally untracked: run `pnpm models:download`, then
+`pnpm models:check`, before publishing the normal build. Actual GPU/model
+acceptance remains a hardware-manual non-claim.
+
+Green focused gates on 2026-08-27: lint, typecheck, 267 Vitest files / 1,482
+tests, production build, all 430 build budgets, 28-file / 4.98 GiB model mirror
+completeness check, and four Chromium Local LLM route/privacy/same-origin
+smokes. The 2026-08-25 release gates also include a clean production dependency
+audit, Docker converter compatibility after security overrides, Firefox/WebKit
+route coverage, strict dev runtime, and standalone (4 Node + 6 browser tests;
+48/48 included worker paths).
+The Orca desktop runtime was unavailable after the documented open retry, so
+interactive visual/model acceptance was not claimed.
 
 ## Invariants
 

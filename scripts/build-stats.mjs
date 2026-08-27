@@ -21,6 +21,7 @@ const DEFAULT_DIST_DIRECTORY = 'dist';
 const DEFAULT_LARGEST_ASSET_COUNT = 20;
 const VITE_MANIFEST_CANDIDATES = ['.vite/manifest.json', 'manifest.json'];
 const JAVASCRIPT_ARTIFACT_EXTENSIONS = new Set(['.js', '.mjs', '.cjs']);
+const EXCLUDED_STATIC_ASSET_PREFIXES = ['assets/local-llm-models/'];
 const MANDATORY_ASYNC_SHELL_SOURCES = new Set([
   'src/layouts/base.layout.vue',
   'src/modules/pwa/OfflineRouteUnavailable.vue',
@@ -388,7 +389,9 @@ function toReportRecord(record) {
 }
 
 async function collectFileRecords(distDirectory) {
-  const paths = await listFiles(distDirectory);
+  const paths = (await listFiles(distDirectory)).filter(path => (
+    !EXCLUDED_STATIC_ASSET_PREFIXES.some(prefix => path.startsWith(prefix))
+  ));
 
   return Promise.all(
     paths.map(async (actualPath) => {

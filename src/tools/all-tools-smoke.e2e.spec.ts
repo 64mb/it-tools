@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-const MINIMUM_TOOL_COUNT = 133;
+const MINIMUM_TOOL_COUNT = 134;
 const FORBIDDEN_CONSOLE_WARNINGS = [
   /Could not create web worker/i,
   /Falling back to loading web worker code in main thread/i,

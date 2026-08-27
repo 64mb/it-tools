@@ -30,6 +30,7 @@ async function createFixture(t, { basePath = '/' } = {}) {
   });
 
   await mkdir(assetsDirectory, { recursive: true });
+  await mkdir(join(assetsDirectory, 'local-llm-models'), { recursive: true });
   const viteManifest = {
     '_shared-feedface.js': {
       file: 'assets/shared-feedface.js',
@@ -87,6 +88,7 @@ async function createFixture(t, { basePath = '/' } = {}) {
     writeFile(join(distDirectory, NESTED_WORKER_PATH), 'self.postMessage("nested worker");\n'),
     writeFile(join(distDirectory, UNRELATED_WORKER_PATH), 'self.postMessage("unrelated");\n'),
     writeFile(join(assetsDirectory, 'icon.png'), Buffer.from([0x89, 0x50, 0x4E, 0x47])),
+    writeFile(join(assetsDirectory, 'local-llm-models', 'weight.onnx_data'), Buffer.alloc(1024, 0x7F)),
     writeFile(join(distDirectory, 'manifest.json'), `${JSON.stringify(viteManifest, null, 2)}\n`),
     writeFile(
       join(distDirectory, 'sw.js'),

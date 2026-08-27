@@ -2,15 +2,14 @@
 
 ## Current baseline
 
-The generated registry contains 133 lazy routes. The accepted normal build on
-2026-08-17 measured a 687,421-byte raw / 186,417-byte gzip main entry, a
-716,733-byte raw / 192,710-byte gzip shell including the document, and a
-53-file, 970,294-byte raw / 313,252-byte gzip Workbox payload. All 426 build
-budget checks passed with unique tool icons preserved.
+The generated registry contains 134 lazy routes. The accepted normal build on
+2026-08-25 measured a 719,149-byte raw / 193,054-byte gzip shell including the
+document and a 53-file, 972,710-byte raw / 313,568-byte gzip Workbox payload.
+All 430 build budget checks passed with unique tool icons preserved.
 
 The accepted standalone artifact contains 126 tools in one HTML file. It is
-7,989,122 bytes (7.62 MiB); the JSON upload envelope `{ "html": ... }` is
-7,991,173 bytes. Both are below the strict 10 MiB limit. The build fails if
+7,994,866 bytes (7.62 MiB); the JSON upload envelope `{ "html": ... }` is
+7,996,917 bytes. Both are below the strict 10 MiB limit. The build fails if
 either measurement exceeds that limit and always removes its intermediate
 directory to prevent stale-build reuse. The increase records the exhaustive
 standalone-only 48-client compatibility audit and its small XLSX fixture; it
@@ -22,6 +21,18 @@ bounded result. The accepted runs observed no Long Task at or above 50 ms.
 Emoji search is worker-backed and virtualized. Monaco remains accepted for Text
 Diff: the smaller CodeMirror spike lost focus, undo, and history when publishing
 async diff results.
+
+Local LLM Playground adds a 23,351-byte raw / 7,960-byte gzip route UI and a
+503,343-byte raw / 147,220-byte gzip explicit-action worker; its measured
+additional route closure is 607,745/182,692 bytes raw/gzip. Its separate ONNX
+Runtime WASM is 23,567,050 bytes raw / 5,699,349 bytes gzip. Neither runtime
+asset enters the shell, Workbox precache, or standalone build. The pinned
+same-origin q4 mirror is 4.98 GiB total (0.62/1.45/2.91 GiB); one selected tier
+downloads only after Load and parallel files render as independent progress
+bars. The mirror is copied as separately versioned static delivery data and is
+excluded from JS/shell build statistics. On the 2026-08-25
+production Chromium run, first client-side route readiness was 171 ms with a
+0.0 ms longest observed task and no worker/model request before Load.
 
 ## Gates
 

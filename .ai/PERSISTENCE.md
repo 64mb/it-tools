@@ -16,6 +16,15 @@ in memory only while unlocked, and there are no accounts or synchronization.
 Locking, timeout, close, migration failure, or cryptographic failure clears
 decrypted state.
 
+Local LLM Playground has a separate non-content cache exception. After an
+explicit Load, Transformers.js may store only fixed public model/runtime
+responses plus a completion marker in `it-tools-local-llm-models-v1`. The user
+can remove the selected model from the tool. Prompts, system instructions,
+generated text, model selection, and generation options remain memory-only;
+unmount terminates the worker and clears text state. Model responses originate
+only from the same-origin pinned static mirror; no tool content or model request
+is sent to Hugging Face at runtime.
+
 Development PWA cleanup may unregister only the root IT Tools `sw.js` and delete
 only `workbox-precache-*`, `it-tools-lazy-assets-*`, and `figlet-fonts-*`. It
 must not clear local/session content or unrelated origins/caches.

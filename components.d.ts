@@ -157,6 +157,7 @@ declare module '@vue/runtime-core' {
     LocalEncryptedOtpVault: typeof import('./src/tools/local-encrypted-otp-vault/local-encrypted-otp-vault.vue')['default']
     LocaleSelector: typeof import('./src/modules/i18n/components/locale-selector.vue')['default']
     LocalFileInspector: typeof import('./src/tools/local-file-inspector/local-file-inspector.vue')['default']
+    LocalLlmPlayground: typeof import('./src/tools/local-llm-playground/local-llm-playground.vue')['default']
     LoremIpsumGenerator: typeof import('./src/tools/lorem-ipsum-generator/lorem-ipsum-generator.vue')['default']
     MacAddressGenerator: typeof import('./src/tools/mac-address-generator/mac-address-generator.vue')['default']
     MacAddressLookup: typeof import('./src/tools/mac-address-lookup/mac-address-lookup.vue')['default']

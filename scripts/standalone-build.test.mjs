@@ -41,6 +41,7 @@ test('generates a standalone-only registry without the reviewed heavyweight rout
     'camera-recorder',
     'dns-over-https-query',
     'local-encrypted-otp-vault',
+    'local-llm-playground',
     'mermaid-diagram',
     'offline-geoip-inspector',
     'pdf-signature-checker',

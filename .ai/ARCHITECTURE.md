@@ -33,6 +33,17 @@ The common worker lifecycle is implemented by `src/utils/worker-protocol.ts`,
 both request and response envelopes; replacement, cancellation, timeout, and
 unmount terminate the physical worker.
 
+Local LLM Playground is a narrow route-owned exception to the shared worker
+helpers because Transformers.js owns streaming callbacks and interruption. Its
+typed client still validates every envelope, permits one operation, applies
+timeouts and physical replacement, and creates the 4.2.0 runtime worker only
+after explicit Load. The worker accepts three fixed Qwen3.5 model IDs, loads q4
+text-only decoder/embed artifacts on WebGPU, and never loads the vision encoder.
+Each tier is pinned to a reviewed upstream commit and fetched exclusively from
+the same-origin `assets/local-llm-models/<revision>/` mirror. Remote model
+fallback is disabled. `pnpm models:download` materializes the untracked mirror;
+`pnpm models:check` is the pre-deployment completeness/size gate.
+
 Production caches the shell and demand-caches opened lazy assets. Development
 does not register a service worker and removes only IT Tools-owned stale PWA
 state. Storage and privacy rules are in `PERSISTENCE.md`.
@@ -53,6 +64,14 @@ Standalone uses hash routing, skips PWA registration, keeps menu collapse state
 in memory, and sends downloads and external links to the parent through
 `EXPORT` and `OPEN_URL` messages. None of these choices affect the normal
 `dist/` build.
+
+The normal generated registry contains 134 tools. Local LLM Playground is
+excluded from standalone because DataLens denies workers and network access and
+because the inference runtime alone exceeds the single-file budget. Its worker,
+ONNX Runtime WASM, and model files are also absent from mandatory PWA precache.
+Normal builds copy an available 4.98 GiB server-side model mirror into `dist/`,
+but build statistics intentionally exclude that separately versioned static
+payload from JavaScript/shell budgets.
 
 Standalone worker compatibility is executable policy: the CSP sandbox test
 runs a valid operation through all 48 included worker clients in Chromium,

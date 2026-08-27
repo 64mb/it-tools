@@ -1,7 +1,14 @@
 # Approved Work
 
-There is no remaining approved feature backlog. Do not invent additional tools
-or revive removed upstream lists.
+## Active approved work
+
+There is no active feature backlog. The approved Local LLM Playground is
+implemented in the normal build with Lite 0.8B, Standard 2B, and Quality 4B;
+Max, vision, automatic downloads, PWA precaching, and standalone inclusion are
+deliberately absent. The three approved q4 tiers are mirrored same-origin from
+pinned revisions; runtime Hugging Face fallback is prohibited.
+
+Do not invent additional tools or revive removed upstream lists.
 
 Future work begins only from an explicit user request or a locally reproduced
 regression. Before implementation, record the narrow scope here, including any
@@ -24,4 +31,7 @@ privacy defaults, worker limits/cancellation, and build budgets intact.
 
 ## Upstream adaptations
 
-None are currently approved or pending.
+No upstream application code or design is approved for adaptation. The local
+implementation consumes exact Apache-2.0 `@huggingface/transformers` 4.2.0 and
+the three fixed Qwen3.5 ONNX model repositories; integration code and UI remain
+local-fork work.
