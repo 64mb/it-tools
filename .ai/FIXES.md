@@ -23,6 +23,10 @@ work is complete as of 2026-09-02.
   Standalone remains native-only because its target CSP denies workers.
 - The release dependency graph pins `browserslist` 4.28.7 so the production
   audit remains free of the advisories affecting earlier transitive versions.
+- The pinned nginx-unprivileged 1.30.4 Alpine 3.24 digest is refreshed after
+  Trivy exposed fixable OpenSSL and Expat CVEs in the previous immutable image;
+  the runtime layer explicitly upgrades Expat to the fixed 2.8.4-r0 floor until
+  that package reaches the pinned base digest.
 - Root, subpath, reverse-proxy, security-header, PWA, Firefox, WebKit, Chromium,
   and Long Task coverage exists in the repository.
 - Storage migrations, quota failure, rollback, and stale-cache cleanup are
