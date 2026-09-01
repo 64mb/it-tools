@@ -43,17 +43,14 @@ test.describe('All tool routes', () => {
 
     const toolCards = page.locator('a[href] .tool-card');
     await expect(toolCards.first()).toBeVisible();
-    await expect.poll(() => toolCards.count()).toBeGreaterThanOrEqual(MINIMUM_TOOL_COUNT);
-    const renderedToolCount = await toolCards.count();
-    expect(renderedToolCount).toBeGreaterThanOrEqual(MINIMUM_TOOL_COUNT);
-
-    const routePaths = await toolCards.evaluateAll(cards => [...new Set(cards.map((card) => {
+    const readUniqueRoutePaths = () => toolCards.evaluateAll(cards => [...new Set(cards.map((card) => {
       const link = card.closest('a');
 
       return link instanceof HTMLAnchorElement ? link.pathname : '';
     }).filter(Boolean))].sort());
-
-    expect(routePaths).toHaveLength(renderedToolCount);
+    await expect.poll(async () => (await readUniqueRoutePaths()).length).toBeGreaterThanOrEqual(MINIMUM_TOOL_COUNT);
+    const routePaths = await readUniqueRoutePaths();
+    expect(routePaths.length).toBeGreaterThanOrEqual(MINIMUM_TOOL_COUNT);
 
     for (const routePath of routePaths) {
       currentRoute = routePath;

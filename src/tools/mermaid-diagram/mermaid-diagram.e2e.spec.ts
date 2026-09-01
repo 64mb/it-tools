@@ -35,6 +35,14 @@ test.describe('Mermaid Diagram Renderer', () => {
         markerConsoleMessages.push(message.text());
       }
     });
+    let delayFirstRendererLoad = true;
+    await page.route(/\/assets\/mermaid-renderer\.service-[^/]+\.js$/u, async (route) => {
+      if (delayFirstRendererLoad) {
+        delayFirstRendererLoad = false;
+        await new Promise(resolve => setTimeout(resolve, 1_000));
+      }
+      await route.continue();
+    });
 
     await page.goto('/mermaid-diagram');
     await expect(page.getByRole('heading', { name: 'Mermaid Diagram Renderer' })).toBeVisible();
@@ -46,7 +54,7 @@ test.describe('Mermaid Diagram Renderer', () => {
     expect(markerRequests).toEqual([]);
 
     await page.getByTestId('mermaid-render').click();
-    await page.getByTestId('mermaid-cancel').dispatchEvent('click');
+    await page.getByTestId('mermaid-cancel').click();
     await expect(page.getByTestId('mermaid-status')).toContainText('cancelled');
     await expect(page.getByTestId('mermaid-empty-preview')).toBeVisible();
 
