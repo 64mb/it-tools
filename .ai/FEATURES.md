@@ -10,6 +10,12 @@ cron schedules, barcode workflows, JWK/JWKS and asymmetric JWT verification,
 OpenAPI inspection, PKCS#12/public PEM inspection, offline GeoIP, and the local
 encrypted OTP vault.
 
+QR Decoder & OTP Import and Barcode Generator/Reader share cross-browser local
+QR recognition in the normal build: native detection is preferred and Firefox
+uses a lazy worker fallback for files and explicit camera frames. The
+single-file DataLens build remains native-only because its CSP denies workers;
+manual OTP payload parsing remains available there.
+
 Local LLM Playground is the only model-inference tool. It offers fixed
 text-only Qwen3.5 Lite 0.8B, Standard 2B, and Quality 4B tiers through local
 WebGPU inference with explicit same-origin downloads, per-file parallel

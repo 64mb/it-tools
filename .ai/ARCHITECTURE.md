@@ -28,6 +28,14 @@ workers stay route-owned and demand-loaded. Large or attacker-controlled work
 uses explicit actions or bounded debounce, input/output limits, timeout,
 cancellation, stale-result protection, and disposal on route teardown.
 
+Shared QR recognition lives in the barcode reader service. Normal builds
+prefer the browser `BarcodeDetector` and lazily use the local `qr-scanner`
+worker only when native QR detection is unavailable. OTP camera capture keeps
+permission explicit, validates frame dimensions, decodes one requested frame,
+and stops every media track on request, timeout, failure, or unmount.
+Standalone compiles this fallback out because its DataLens CSP sets
+`worker-src 'none'`; it must never attempt a blob worker there.
+
 The common worker lifecycle is implemented by `src/utils/worker-protocol.ts`,
 `src/utils/worker-task.ts`, and `src/utils/bounded-text-task.ts`. Workers validate
 both request and response envelopes; replacement, cancellation, timeout, and

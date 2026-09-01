@@ -1,7 +1,7 @@
 # Resolved Engineering State
 
 The approved correctness, security, delivery, persistence, and performance
-work is complete as of 2026-08-27.
+work is complete as of 2026-09-02.
 
 - Production dependency audit has no known advisory in the approved graph.
 - Scoped transitive overrides keep the browser-only Transformers dependency's
@@ -16,6 +16,13 @@ work is complete as of 2026-08-27.
   interleaving aggregate and per-file percentages. Its pinned q4 artifacts are
   served same-origin only; Transformers.js remote fallback is disabled and a
   focused browser regression rejects Hugging Face runtime traffic.
+- QR image reading and OTP camera-frame decoding prefer the native
+  `BarcodeDetector` where available and use a bounded, lazy local worker
+  fallback in Firefox. The shared reader retains file, pixel, payload, result,
+  explicit-permission, five-minute teardown, and media-track cleanup bounds.
+  Standalone remains native-only because its target CSP denies workers.
+- The release dependency graph pins `browserslist` 4.28.7 so the production
+  audit remains free of the advisories affecting earlier transitive versions.
 - Root, subpath, reverse-proxy, security-header, PWA, Firefox, WebKit, Chromium,
   and Long Task coverage exists in the repository.
 - Storage migrations, quota failure, rollback, and stale-cache cleanup are

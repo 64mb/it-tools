@@ -7,7 +7,7 @@ import {
   decodeQrFile,
   decodeQrVideoFrame,
   parseOtpAuthUri,
-  supportsNativeQrDetector,
+  supportsQrDecoder,
 } from './qr-decoder-otp-import.service';
 import { formatBytes } from '@/utils/convert';
 import { useCopy } from '@/composable/copy';
@@ -15,8 +15,9 @@ import { useCopy } from '@/composable/copy';
 const payload = ref('');
 const parsedOtp = shallowRef<ParsedOtpAuth>();
 const selectedFile = shallowRef<File>();
-const detectorAvailable = ref(false);
-const status = ref('Checking native QR support…');
+const decoderAvailable = ref(false);
+const cameraAvailable = ref(false);
+const status = ref('Checking local QR support…');
 const error = ref('');
 const isReading = ref(false);
 const video = ref<HTMLVideoElement>();
@@ -87,7 +88,7 @@ function stopCamera(message = 'Camera stopped.'): void {
 }
 
 async function startCamera(): Promise<void> {
-  if (!detectorAvailable.value || cameraActive.value) {
+  if (!cameraAvailable.value || cameraActive.value) {
     return;
   }
   error.value = '';
@@ -151,10 +152,13 @@ const otpJson = computed(() => parsedOtp.value ? JSON.stringify(parsedOtp.value,
 const { copy } = useCopy({ createToast: true });
 
 onMounted(async () => {
-  detectorAvailable.value = await supportsNativeQrDetector();
-  status.value = detectorAvailable.value
-    ? 'Native QR decoding is available. Select an image or start the camera explicitly.'
-    : 'Native BarcodeDetector QR support is unavailable. You can still paste an otpauth:// payload for safe local parsing.';
+  decoderAvailable.value = await supportsQrDecoder();
+  cameraAvailable.value = decoderAvailable.value && typeof navigator.mediaDevices?.getUserMedia === 'function';
+  status.value = decoderAvailable.value
+    ? cameraAvailable.value
+      ? 'Local QR decoding is available. Select an image or start the camera explicitly.'
+      : 'Local QR image decoding is available, but camera capture is unavailable in this browser context.'
+    : 'QR decoding is unavailable. You can still paste an otpauth:// payload for safe local parsing.';
 });
 onBeforeUnmount(() => stopCamera());
 </script>
@@ -162,7 +166,7 @@ onBeforeUnmount(() => stopCamera());
 <template>
   <div class="c-tool-stack c-tool-workbench">
     <c-alert title="Local decoding with explicit camera access">
-      Images, camera frames, QR payloads, and OTP secrets stay in this page and are never saved. Camera access starts only on request, stops after five minutes, and is released when you leave. Native QR support depends on the browser.
+      Images, camera frames, QR payloads, and OTP secrets stay in this page and are never saved. Camera access starts only on request, stops after five minutes, and is released when you leave. A native detector is used when available; other supported browsers use a local worker fallback.
     </c-alert>
 
     <c-card class="c-tool-panel" title="Decode a local QR image">
@@ -171,7 +175,7 @@ onBeforeUnmount(() => stopCamera());
         {{ selectedFile.name }} — {{ formatBytes(selectedFile.size) }}
       </p>
       <div class="c-task-actions mt-3">
-        <c-button type="primary" data-test-id="qr-decode-file" :disabled="!detectorAvailable || !canDecodeFile || isReading" @click="decodeFile">
+        <c-button type="primary" data-test-id="qr-decode-file" :disabled="!decoderAvailable || !canDecodeFile || isReading" @click="decodeFile">
           {{ isReading ? 'Decoding…' : 'Decode image' }}
         </c-button>
       </div>
@@ -180,7 +184,7 @@ onBeforeUnmount(() => stopCamera());
     <c-card class="c-tool-panel" title="Decode one camera frame">
       <video ref="video" data-test-id="qr-camera-preview" :muted="true" playsinline class="camera-preview" />
       <div class="c-task-actions mt-3">
-        <c-button v-if="!cameraActive" type="primary" data-test-id="qr-start-camera" :disabled="!detectorAvailable" @click="startCamera">
+        <c-button v-if="!cameraActive" type="primary" data-test-id="qr-start-camera" :disabled="!cameraAvailable" @click="startCamera">
           Start camera
         </c-button>
         <c-button v-if="cameraActive" type="primary" data-test-id="qr-decode-frame" :disabled="isReading" @click="decodeFrame">
