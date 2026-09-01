@@ -35,11 +35,15 @@ test.describe('Mermaid Diagram Renderer', () => {
         markerConsoleMessages.push(message.text());
       }
     });
-    let delayFirstRendererLoad = true;
+    let releaseFirstRendererLoad = () => {};
+    const firstRendererLoadGate = new Promise<void>((resolve) => {
+      releaseFirstRendererLoad = resolve;
+    });
+    let gateFirstRendererLoad = true;
     await page.route(/\/assets\/mermaid-renderer\.service-[^/]+\.js$/u, async (route) => {
-      if (delayFirstRendererLoad) {
-        delayFirstRendererLoad = false;
-        await new Promise(resolve => setTimeout(resolve, 1_000));
+      if (gateFirstRendererLoad) {
+        gateFirstRendererLoad = false;
+        await firstRendererLoadGate;
       }
       await route.continue();
     });
@@ -54,7 +58,10 @@ test.describe('Mermaid Diagram Renderer', () => {
     expect(markerRequests).toEqual([]);
 
     await page.getByTestId('mermaid-render').click();
-    await page.getByTestId('mermaid-cancel').click();
+    const cancelButton = page.getByTestId('mermaid-cancel');
+    await expect(cancelButton).toBeVisible();
+    await cancelButton.evaluate(button => (button as HTMLButtonElement).click());
+    releaseFirstRendererLoad();
     await expect(page.getByTestId('mermaid-status')).toContainText('cancelled');
     await expect(page.getByTestId('mermaid-empty-preview')).toBeVisible();
 
