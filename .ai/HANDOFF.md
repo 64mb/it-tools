@@ -82,6 +82,10 @@ coverage, and standalone (4 Node + 6 browser tests; 48/48 included worker
 paths). The 28-file / 4.98 GiB model mirror completeness check and four
 Chromium Local LLM route/privacy/same-origin smokes remain the accepted model
 release evidence.
+GitHub runs the complete E2E suite in three Chromium shards. Focused Firefox
+and WebKit jobs cover the shell, worker-backed conversion, shared QR fallback,
+and camera path without treating Chromium-only performance and permission APIs
+as portable contracts.
 The Orca desktop runtime was unavailable after the documented open retry, so
 interactive visual/model acceptance was not claimed.
 

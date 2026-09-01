@@ -29,8 +29,9 @@ work is complete as of 2026-09-02.
   that package reaches the pinned base digest.
 - E2E route inventory counts unique paths so intentional Newest/Favorites card
   duplicates do not look like extra tools; Mermaid cancellation delays its
-  first lazy-module fixture deterministically, and the sharded workflow budget
-  covers dependency/browser setup plus the full three-engine suite.
+  first lazy-module fixture deterministically. CI runs the complete suite in
+  three Chromium shards and focused Firefox/WebKit smokes for the shell,
+  worker-backed conversion, shared QR reader, and camera path.
 - Root, subpath, reverse-proxy, security-header, PWA, Firefox, WebKit, Chromium,
   and Long Task coverage exists in the repository.
 - Storage migrations, quota failure, rollback, and stale-cache cleanup are
