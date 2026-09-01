@@ -1,4 +1,7 @@
+import { Buffer } from 'node:buffer';
+
 import { expect, test } from '@playwright/test';
+import QRCode from 'qrcode';
 
 test.describe('Tool - Barcode generator and reader', () => {
   test.beforeEach(async ({ page }) => {
@@ -33,5 +36,25 @@ test.describe('Tool - Barcode generator and reader', () => {
     await expect(page.getByTestId('barcode-reader-status')).not.toContainText('Checking', { timeout: 5_000 });
     const status = await page.getByTestId('barcode-reader-status').textContent();
     expect(status).toMatch(/Reader available|not available/);
+  });
+
+  test('uses the local QR fallback when native BarcodeDetector is absent', async ({ page }) => {
+    await page.addInitScript(() => {
+      Reflect.deleteProperty(globalThis, 'BarcodeDetector');
+    });
+    await page.goto('/barcode-generator-reader');
+
+    const value = 'firefox-local-qr';
+    const qrDataUrl = await QRCode.toDataURL(value, { margin: 4, width: 512 });
+    await page.locator('input[type="file"]').setInputFiles({
+      buffer: Buffer.from(qrDataUrl.slice(qrDataUrl.indexOf(',') + 1), 'base64'),
+      mimeType: 'image/png',
+      name: 'firefox-barcode.png',
+    });
+
+    await expect(page.getByTestId('barcode-read')).toBeEnabled();
+    await page.getByTestId('barcode-read').click();
+    await expect(page.getByTestId('barcode-results')).toContainText('qr_code');
+    await expect(page.getByTestId('barcode-results')).toContainText(value);
   });
 });

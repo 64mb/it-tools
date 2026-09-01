@@ -7,7 +7,7 @@ import {
 import {
   BARCODE_MAX_FILE_BYTES,
   type BarcodeReaderResult,
-  getBarcodeDetectorFormats,
+  getBarcodeReaderFormats,
   readBarcodesFromFile,
 } from './barcode-reader.service';
 import { downloadTextFile } from '@/composable/downloadText';
@@ -40,12 +40,12 @@ const isReading = ref(false);
 const signature = computed(() => `${format.value}\0${value.value}`);
 const generatorIsStale = computed(() => Boolean(svg.value && generatedSignature.value !== signature.value));
 const svgDataUrl = computed(() => svg.value ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg.value)}` : '');
-const detectorAvailable = computed(() => readerFormats.value.length > 0);
+const readerAvailable = computed(() => readerFormats.value.length > 0);
 const canRead = computed(() => Boolean(
   selectedFile.value
   && selectedFile.value.size > 0
   && selectedFile.value.size <= BARCODE_MAX_FILE_BYTES
-  && detectorAvailable.value
+  && readerAvailable.value
   && !isReading.value,
 ));
 
@@ -96,7 +96,7 @@ async function readFile() {
   }
   isReading.value = true;
   readerError.value = '';
-  readerStatus.value = 'Reading barcodes locally with the browser image detector…';
+  readerStatus.value = 'Reading barcodes locally…';
   try {
     detected.value = await readBarcodesFromFile(file, readerFormats.value);
     readerStatus.value = detected.value.length === 0
@@ -114,7 +114,7 @@ async function readFile() {
 
 const { copy } = useCopy({ createToast: true });
 onMounted(async () => {
-  readerFormats.value = await getBarcodeDetectorFormats();
+  readerFormats.value = await getBarcodeReaderFormats();
   readerStatus.value = readerFormats.value.length > 0
     ? `Reader available for: ${readerFormats.value.join(', ')}.`
     : 'BarcodeDetector is not available in this browser. Barcode generation still works.';
@@ -170,9 +170,9 @@ generate();
         {{ selectedFile.name }} — {{ formatBytes(selectedFile.size) }}
       </p>
       <p mt-3 text-sm op-70>
-        The image is processed only after you select Read barcodes. Nothing is uploaded or stored. Reader format support depends on this browser.
+        The image is processed only after you select Read barcodes. Nothing is uploaded or stored. Native formats are used when available; QR has a local worker fallback.
       </p>
-      <c-alert v-if="!detectorAvailable" title="Reader unavailable" mt-3 data-test-id="barcode-reader-unavailable">
+      <c-alert v-if="!readerAvailable" title="Reader unavailable" mt-3 data-test-id="barcode-reader-unavailable">
         {{ readerStatus }}
       </c-alert>
       <c-alert v-if="readerError" title="Reader error" mt-3 data-test-id="barcode-reader-error">

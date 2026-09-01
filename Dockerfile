@@ -24,7 +24,10 @@ RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
     case "$BASE_URL" in /|/*/) ;; *) echo 'BASE_URL must start and end with /' >&2; exit 1 ;; esac && \
     pnpm build
 
-FROM nginxinc/nginx-unprivileged:1.30.4-alpine3.24@sha256:44e36330f74d4f3a1d4e222acca9e23b401fb87811a7597024502bb759c4dd49 AS production-stage
+FROM nginxinc/nginx-unprivileged:1.30.4-alpine3.24@sha256:45ce1e2e699234253d1def7baa96218a5d00b498d1ba0cbb1a17b6bdf73d1351 AS production-stage
+
+USER root
+RUN apk add --no-cache --upgrade 'libexpat>=2.8.4-r0'
 
 ENV NGINX_PORT=8080
 

@@ -1,4 +1,10 @@
-import { BARCODE_MAX_VALUE_LENGTH, readBarcodesFromFile } from '../barcode-generator-reader/barcode-reader.service';
+import {
+  BARCODE_MAX_IMAGE_PIXELS,
+  BARCODE_MAX_VALUE_LENGTH,
+  readBarcodesFromFile,
+  readQrCodesFromVideo,
+  supportsQrReader,
+} from '../barcode-generator-reader/barcode-reader.service';
 
 export const QR_MAX_PAYLOAD_CHARACTERS = BARCODE_MAX_VALUE_LENGTH;
 export const QR_CAMERA_MAX_DURATION_MS = 5 * 60_000;
@@ -18,30 +24,8 @@ export interface ParsedOtpAuth {
   warning?: string
 }
 
-interface NativeBarcode { format: string; rawValue: string }
-interface NativeBarcodeDetector {
-  detect: (source: CanvasImageSource) => Promise<NativeBarcode[]>
-}
-interface NativeBarcodeDetectorConstructor {
-  new(options?: { formats?: string[] }): NativeBarcodeDetector
-  getSupportedFormats?: () => Promise<string[]>
-}
-
-function getDetector(): NativeBarcodeDetectorConstructor | undefined {
-  return (globalThis as typeof globalThis & { BarcodeDetector?: NativeBarcodeDetectorConstructor }).BarcodeDetector;
-}
-
-export async function supportsNativeQrDetector(): Promise<boolean> {
-  const Detector = getDetector();
-  if (!Detector) {
-    return false;
-  }
-  try {
-    return (await Detector.getSupportedFormats?.())?.includes('qr_code') ?? false;
-  }
-  catch {
-    return false;
-  }
+export async function supportsQrDecoder(): Promise<boolean> {
+  return supportsQrReader();
 }
 
 export async function decodeQrFile(file: File): Promise<string[]> {
@@ -50,23 +34,14 @@ export async function decodeQrFile(file: File): Promise<string[]> {
 }
 
 export async function decodeQrVideoFrame(video: HTMLVideoElement): Promise<string[]> {
-  const Detector = getDetector();
-  if (!Detector) {
-    throw new Error('BarcodeDetector is not available in this browser.');
-  }
   if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA || video.videoWidth < 1 || video.videoHeight < 1) {
     throw new Error('The camera frame is not ready yet.');
   }
-  const results = await new Detector({ formats: ['qr_code'] }).detect(video);
-  if (!Array.isArray(results) || results.length > 10) {
-    throw new Error('The browser returned too many or invalid QR results.');
+  if (video.videoWidth * video.videoHeight > BARCODE_MAX_IMAGE_PIXELS) {
+    throw new Error(`Camera frames are limited to ${BARCODE_MAX_IMAGE_PIXELS.toLocaleString('en-US')} pixels.`);
   }
-  return results.map((result) => {
-    if (result.format !== 'qr_code' || typeof result.rawValue !== 'string' || result.rawValue.length > QR_MAX_PAYLOAD_CHARACTERS) {
-      throw new Error('The browser returned an invalid QR result.');
-    }
-    return result.rawValue;
-  });
+  const results = await readQrCodesFromVideo(video);
+  return results.filter(result => result.format === 'qr_code').map(result => result.rawValue);
 }
 
 function parseIntegerParameter(value: string | null, fallback: number, name: string): number {

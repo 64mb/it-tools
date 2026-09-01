@@ -10,11 +10,28 @@ permissions:
 
 jobs:
   test:
-    timeout-minutes: 10
+    name: ${{ matrix.label }}
+    timeout-minutes: 20
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        shard: [1/3, 2/3, 3/3]
+        include:
+          - label: Chromium 1/3
+            project: chromium
+            arguments: --shard=1/3
+          - label: Chromium 2/3
+            project: chromium
+            arguments: --shard=2/3
+          - label: Chromium 3/3
+            project: chromium
+            arguments: --shard=3/3
+          - label: Firefox smoke
+            project: firefox
+            arguments: src/cross-browser-smoke.e2e.spec.ts src/tools/qr-decoder-otp-import/qr-decoder-otp-import.e2e.spec.ts src/tools/barcode-generator-reader/barcode-generator-reader.e2e.spec.ts
+          - label: WebKit smoke
+            project: webkit
+            arguments: src/cross-browser-smoke.e2e.spec.ts src/tools/qr-decoder-otp-import/qr-decoder-otp-import.e2e.spec.ts src/tools/barcode-generator-reader/barcode-generator-reader.e2e.spec.ts
     steps:
       - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4
         with:
@@ -48,12 +65,12 @@ jobs:
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('pnpm-lock.yaml', '**/playwright.config.ts') }}
+          key: ${{ runner.os }}-playwright-${{ matrix.project }}-${{ hashFiles('pnpm-lock.yaml', '**/playwright.config.ts') }}
           restore-keys: |
-            ${{ runner.os }}-playwright-
+            ${{ runner.os }}-playwright-${{ matrix.project }}-
 
       - name: Install Playwright Browsers
-        run: pnpm exec playwright install --with-deps
+        run: pnpm exec playwright install --with-deps ${{ matrix.project }}
 
       - name: Run Playwright tests
-        run: pnpm run test:e2e --shard=${{ matrix.shard }}
+        run: pnpm run test:e2e --project=${{ matrix.project }} ${{ matrix.arguments }}

@@ -34,6 +34,13 @@ excluded from JS/shell build statistics. On the 2026-08-25
 production Chromium run, first client-side route readiness was 171 ms with a
 0.0 ms longest observed task and no worker/model request before Load.
 
+Firefox QR compatibility is route-owned and demand-loaded. The accepted normal
+build adds a 18,129-byte raw / 6.39 kB gzip shared reader module and a
+43,954-byte raw / 10.46 kB gzip QR worker; neither enters the 719,149-byte shell
+or the 53-file Workbox precache. The standalone compile removes the fallback
+entirely and remains a 7,996,206-byte single HTML artifact under the 10 MiB
+limit.
+
 ## Gates
 
 `.ai/baselines/build-budgets.json` is the sole detailed budget source. It

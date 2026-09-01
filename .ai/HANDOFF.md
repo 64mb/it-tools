@@ -11,11 +11,12 @@ The repository may be intentionally dirty; inspect `git status` and never
 overwrite unrelated local-fork work. Do not merge, rebase, or cherry-pick
 upstream automatically.
 
-Current checkpoint: branch `feat/ai-tools-local-llm-1842`, based on commit
-`5395615c0c9537ebf78b20e6c7b275f4ab3fa794`. The branch tip packages the final
-approved browser-tool catalog, persistence/UI/performance work, standalone
-delivery, and the 2026-08-27 Local LLM same-origin model mirror. Keep the whole
-branch together when reviewing or transferring it.
+Current checkpoint: the 2026-09-02 Firefox QR maintenance release adds a shared
+native-first, local worker fallback for QR files and explicit OTP camera frames
+in the normal build. It retains the final approved browser-tool catalog,
+persistence/UI/performance work, standalone delivery, and the Local LLM
+same-origin model mirror. Standalone deliberately compiles the QR fallback out
+because the DataLens CSP denies workers.
 
 ## Resume
 
@@ -39,8 +40,8 @@ the touched surface.
 
 ## Standalone/DataLens
 
-The final artifact is `dist-standalone/it-tools.html`: one 7,994,866-byte file
-(7.62 MiB; 7,996,917-byte JSON upload envelope) with 126 tools and no runtime
+The final artifact is `dist-standalone/it-tools.html`: one 7,996,206-byte file
+(7.63 MiB) with 126 tools and no runtime
 network resources. `pnpm test:standalone` rebuilds it from current sources and
 runs Chromium, Firefox, and WebKit serially.
 
@@ -74,13 +75,17 @@ mirror is intentionally untracked: run `pnpm models:download`, then
 `pnpm models:check`, before publishing the normal build. Actual GPU/model
 acceptance remains a hardware-manual non-claim.
 
-Green focused gates on 2026-08-27: lint, typecheck, 267 Vitest files / 1,482
-tests, production build, all 430 build budgets, 28-file / 4.98 GiB model mirror
-completeness check, and four Chromium Local LLM route/privacy/same-origin
-smokes. The 2026-08-25 release gates also include a clean production dependency
-audit, Docker converter compatibility after security overrides, Firefox/WebKit
-route coverage, strict dev runtime, and standalone (4 Node + 6 browser tests;
-48/48 included worker paths).
+Green focused gates on 2026-09-02: lint, typecheck, 267 Vitest files / 1,484
+tests, production build, all 432 build budgets, a clean production dependency
+audit, Chromium/Firefox QR file and OTP camera regressions, WebKit QR file
+coverage, and standalone (4 Node + 6 browser tests; 48/48 included worker
+paths). The 28-file / 4.98 GiB model mirror completeness check and four
+Chromium Local LLM route/privacy/same-origin smokes remain the accepted model
+release evidence.
+GitHub runs the complete E2E suite in three Chromium shards. Focused Firefox
+and WebKit jobs cover the shell, worker-backed conversion, shared QR fallback,
+and camera path without treating Chromium-only performance and permission APIs
+as portable contracts.
 The Orca desktop runtime was unavailable after the documented open retry, so
 interactive visual/model acceptance was not claimed.
 
